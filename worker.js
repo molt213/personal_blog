@@ -22,6 +22,8 @@ export default {
           .prepare("INSERT INTO messages (name, text) VALUES (?, ?)")
           .bind(name, text)
           .run();
+        // 留言成功后给站主发通知邮件;密钥未配置时静默跳过,不影响留言功能
+        notifyOwner(env, { name, text }).catch(() => {});
         return Response.json({ ok: true });
       }
     }
@@ -54,4 +56,33 @@ async function handleViews(env) {
   } catch (e) {
     return Response.json({ ok: false, error: String(e) });
   }
+}
+
+// 通过 Brevo(免费 300 封/天)发送通知邮件,主机固定为官方 https 接口
+const BREVO_API_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+
+async function notifyOwner(env, { name, text }) {
+  const key = env.BREVO_API_KEY;
+  if (!key) return;
+  const owner = "wurui213@molt213.top";
+  const html =
+    `<p>你的博客收到一条新留言:</p>` +
+    `<p><b>${esc(name)}</b> 说:</p>` +
+    `<blockquote style="border-left:3px solid #c2410c;padding-left:12px;color:#5d564e;">${esc(text)}</blockquote>`;
+  await fetch(BREVO_API_ENDPOINT, {
+    method: "POST",
+    headers: { "api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { email: owner, name: "博客留言通知" },
+      to: [{ email: owner }],
+      subject: `新留言: ${name}`,
+      htmlContent: html,
+    }),
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
 }
