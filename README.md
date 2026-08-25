@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS messages (
 
 ## 写文章:怎么发布一篇博客
 
-现在的结构:`index.html`(首页,含文章列表和留言板)、`style.css`(全站样式)、`posts/`(文章文件)。
+现在的结构:`worker.js`(全合一:页面、样式、文章、留言接口、统计、邮件通知都在这一份代码里)+ `wrangler.jsonc`(配置与绑定)。改文字/文章直接改 `worker.js` 里对应的字符串常量即可。
 
 1. 复制 `posts/hello-world.html` 改名为 `posts/你的文章.html`(文件名用英文短横线);
 2. 改 `<h1>` 标题、`<time>` 日期、正文(支持标题/列表/引用/代码/图片,样式已备好);
