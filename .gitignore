@@ -1,0 +1,7 @@
+# 本机工具产生的数据,不进仓库
+.mimosa/
+
+# 常见开发产物
+node_modules/
+.DS_Store
+wrangler.toml.local

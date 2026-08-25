@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的个人网站</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 640px; margin: 0 auto; padding: 24px 16px; color: #1f2937; background: #f9fafb; }
+    h1 { font-size: 28px; }
+    p { line-height: 1.7; color: #4b5563; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-top: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+    input, textarea { width: 100%; box-sizing: border-box; padding: 10px; margin: 6px 0 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .msg { border-bottom: 1px solid #f3f4f6; padding: 12px 0; }
+    .msg:last-child { border-bottom: none; }
+    .msg .name { font-weight: 600; }
+    .msg .time { color: #9ca3af; font-size: 12px; margin-left: 8px; }
+    .msg .text { margin-top: 4px; color: #374151; }
+    .hint { color: #9ca3af; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>你好,这是我的个人网站</h1>
+  <p>这个页面本身是静态的(由 Cloudflare 全球 CDN 直接分发),但下面的留言板是<strong>动态的</strong>:数据存在 Cloudflare D1 数据库里,提交和读取都通过边缘函数完成——没有花一分钱服务器钱。</p>
+
+  <div class="card">
+    <h2>给我留言</h2>
+    <form id="form">
+      <input id="name" placeholder="你的名字(可不填)" maxlength="20">
+      <textarea id="text" placeholder="想说的话…" required></textarea>
+      <button type="submit" id="btn">发送</button>
+      <span class="hint" id="hint"></span>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>大家的留言</h2>
+    <div id="list"><p class="hint">加载中…</p></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const hint = document.getElementById('hint');
+    const btn = document.getElementById('btn');
+    const list = document.getElementById('list');
+
+    async function load() {
+      const res = await fetch('/api/guestbook');
+      const rows = await res.json();
+      list.innerHTML = rows.length
+        ? rows.map(r => `
+            <div class="msg">
+              <span class="name">${r.name}</span>
+              <span class="time">${r.created_at}</span>
+              <div class="text">${r.text}</div>
+            </div>`).join('')
+        : '<p class="hint">还没有留言,来抢沙发吧。</p>';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = new URLSearchParams({ name: name.value, text: text.value });
+      btn.disabled = true;
+      hint.textContent = '发送中…';
+      const res = await fetch('/api/guestbook', { method: 'POST', body });
+      if (res.ok) {
+        text.value = '';
+        hint.textContent = '✅ 留言成功!';
+        load();
+      } else {
+        hint.textContent = '❌ 发送失败,请稍后再试';
+      }
+      btn.disabled = false;
+    });
+
+    load();
+  </script>
+</body>
+</html>
