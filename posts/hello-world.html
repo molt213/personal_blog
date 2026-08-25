@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="第一篇:小站开张">
+  <title>第一篇:小站开张 · 【你的名字】</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="site-name" href="/">【你的名字】</a>
+      <nav>
+        <a href="/">首页</a>
+        <a href="/#guestbook">留言板</a>
+      </nav>
+    </header>
+
+    <!--
+      【文章模板】新文章步骤:
+      1. 复制这个文件,改名为 posts/文章名.html(用英文-连字符,如 post-1.html);
+      2. 改 head 里的 title/description;
+      3. 把 <h1> 标题、<time> 日期、正文改成你的内容;
+      4. 在 index.html 的 .posts 列表里加一行;git push 即发布。
+      正文支持 h2 / h3、列表、引用、代码、图片,样式已在 style.css 里。
+    -->
+    <article>
+      <h1 class="title">第一篇:小站开张</h1>
+      <p class="meta">2026-08-25 · 发布</p>
+
+      <p>这是占位示例文章——排版、标题层级、引用、代码块大概长什么样,都在下面了。等你的真实内容来了我就换掉。</p>
+
+      <h2>这篇子标题的样子</h2>
+      <p>正文就是这样的段落,行距和字号让人读得舒服。中文文字在 <strong>16.5px、1.85 行高</strong> 下最耐看,这是从 overreacted.io 学来的气派。</p>
+
+      <blockquote>引用块长这样——左边一根细线,文字颜色浅一点,适合放名言或者自己的想法。</blockquote>
+
+      <ul>
+        <li>无序列表项;</li>
+        <li>再放一项,比如"欢迎大家来留言板挑刺"。</li>
+      </ul>
+
+      <h3>代码块</h3>
+      <pre><code>git add post-1.html &amp;&amp; git commit -m "新的文章" &amp;&amp; git push</code></pre>
+
+      <p>大概就这样。发布一篇文章 = 一个文件 + 索引里一行,整个流程没有服务器、没有数据库的新增成本。</p>
+    </article>
+
+    <footer>© 2026 【你的名字】</footer>
+  </div>
+</body>
+</html>

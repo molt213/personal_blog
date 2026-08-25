@@ -56,6 +56,15 @@ CREATE TABLE IF NOT EXISTS messages (
 
 ---
 
+## 写文章:怎么发布一篇博客
+
+现在的结构:`index.html`(首页,含文章列表和留言板)、`style.css`(全站样式)、`posts/`(文章文件)。
+
+1. 复制 `posts/hello-world.html` 改名为 `posts/你的文章.html`(文件名用英文短横线);
+2. 改 `<h1>` 标题、`<time>` 日期、正文(支持标题/列表/引用/代码/图片,样式已备好);
+3. 在 `index.html` 文章列表里加一行 `<li><a href="posts/你的文章.html">标题</a><time>日期</time></li>`;
+4. `git push`,自动发布。设计上走"极简文稿"路线(白纸黑字单栏),不花哨,重点是读得舒服。
+
 ## 日常更新:改内容要重传吗?不用
 
 只要第 2 步连过一次 GitHub,之后改内容**永远不需要重新上传文件**。
