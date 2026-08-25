@@ -13,8 +13,4 @@
       "database_id": "3f5f3a58-cf8b-4f21-a4a9-54b469e3c291"
     }
   ]
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 900905a (在 wrangler.jsonc 中声明 D1 数据库绑定(Workers Git 构建才能带上))
