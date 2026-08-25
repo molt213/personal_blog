@@ -49,6 +49,7 @@
     <footer>
       <div>大家的留言:<div id="list"><p class="empty">加载中…</p></div></div>
       <p style="margin-top:24px;">© 2026 【你的名字】 · 有事可以发 <a href="mailto:wurui213@molt213.top">wurui213@molt213.top</a> · 这个站跑在 Cloudflare 的免费服务上,论白嫖我是认真的。</p>
+      <p class="stats" id="stats" style="margin-top:6px;"></p>
     </footer>
   </div>
 
@@ -110,6 +111,11 @@
     });
 
     load();
+
+    // 页脚统计:访客计数 + 开站天数(KV 支撑,未配好则静默隐藏)
+    fetch('/api/views').then(r => r.json()).then(d => {
+      if (d.ok) document.getElementById('stats').textContent = `被访问过 ${d.views} 次 · 开站第 ${d.days} 天`;
+    }).catch(() => {});
   </script>
 </body>
 </html>

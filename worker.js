@@ -26,7 +26,32 @@ export default {
       }
     }
 
+    if (url.pathname === "/api/views") {
+      return handleViews(env);
+    }
+
     // 其他请求(HTML 页面等静态文件)交给 ASSETS 处理
     return env.ASSETS.fetch(request);
+  }
+}
+
+// 访客计数 + 开站天数(KV 存储;未绑定 KV 时优雅降级)
+async function handleViews(env) {
+  try {
+    const kv = env.KV;
+    if (!kv) return Response.json({ ok: false, error: "no-kv-binding" });
+
+    let views = parseInt((await kv.get("views")) || "0", 10) + 1;
+    await kv.put("views", String(views));
+
+    let birthday = await kv.get("birthday");
+    if (!birthday) {
+      birthday = "2026-08-26";
+      await kv.put("birthday", birthday);
+    }
+    const days = Math.max(1, Math.floor((Date.now() - new Date(birthday).getTime()) / 86400000) + 1);
+    return Response.json({ ok: true, views, days });
+  } catch (e) {
+    return Response.json({ ok: false, error: String(e) });
   }
 }
