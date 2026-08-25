@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "personal-blog",
+  "compatibility_date": "2026-08-25",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "my-db",
+      "database_id": "3f5f3a58-cf8b-4f21-a4a9-54b469e3c291"
+    }
+  ]
+}
