@@ -13,7 +13,9 @@ export default {
       }
       if (request.method === "POST") {
         const form = await request.formData();
-        const name = (form.get("name") || "匿名").slice(0, 20);
+        const rawName = (form.get("name") || "").trim();
+        // 兼容历史 bug:客户端可能把空名字传成字符串 "undefined"
+        const name = (rawName && rawName !== "undefined") ? rawName.slice(0, 20) : "匿名";
         const text = (form.get("text") || "").trim().slice(0, 500);
         if (!text) return Response.json({ error: "留言不能为空" }, { status: 400 });
         await env.DB
