@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
   "name": "personal-blog",
+  "main": "worker.js",
+  "assets": {
+    "directory": "./"
+  },
   "compatibility_date": "2026-08-25",
   "d1_databases": [
     {
