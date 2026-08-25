@@ -3,285 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="molt 的个人网站 — 静态页面 + 边缘函数 + 免费数据库,零服务器成本">
-  <title>molt · 个人网站</title>
+  <meta name="description" content="【你的名字】的小站">
+  <title>【你的名字】· 小站</title>
   <style>
     :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --border: #e2e8f0;
-      --text: #0f172a;
-      --text-2: #475569;
-      --text-3: #94a3b8;
-      --accent: #4f46e5;
-      --accent-dark: #4338ca;
-      --accent-soft: #eef2ff;
-      --green: #10b981;
-      --red: #ef4444;
-      --radius: 16px;
-      --radius-sm: 10px;
+      --text: #1c1917;
+      --text-2: #57534e;
+      --text-3: #a8a29e;
+      --border: #e7e5e4;
+      --accent: #1d4ed8;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { scroll-behavior: smooth; }
-
     body {
       font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
+      background: #ffffff;
       color: var(--text);
-      line-height: 1.7;
+      line-height: 1.9;
+      font-size: 15.5px;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 装饰:两个极淡的色晕,保持扁平质感 */
-    body::before, body::after {
-      content: "";
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(90px);
-      z-index: -1;
-    }
-    body::before { width: 480px; height: 480px; top: -160px; right: -120px; background: rgba(79, 70, 229, 0.08); }
-    body::after { width: 420px; height: 420px; bottom: -140px; left: -120px; background: rgba(236, 72, 153, 0.06); }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 0 20px; }
 
-    .container { max-width: 720px; margin: 0 auto; padding: 0 20px 64px; }
+    /* ---------- 页头 ---------- */
+    header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 28px 0; border-bottom: 1px solid var(--border);
+    }
+    .site-name { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+    header a { color: var(--text-2); text-decoration: none; font-size: 14px; }
+    header a:hover { color: var(--text); text-decoration: underline; }
 
-    /* ---------- 导航 ---------- */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 0;
-    }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
-    .brand .logo {
-      width: 32px; height: 32px; border-radius: 9px;
-      display: grid; place-items: center;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      color: #fff; font-size: 16px;
-    }
-    .nav-links { display: flex; gap: 6px; }
-    .nav-links a {
-      color: var(--text-2); text-decoration: none; font-size: 14px;
-      padding: 6px 12px; border-radius: 999px;
-      transition: background .15s, color .15s;
-    }
-    .nav-links a:hover { background: var(--accent-soft); color: var(--accent); }
+    /* ---------- 正文 ---------- */
+    main { padding: 40px 0 24px; }
 
-    /* ---------- Hero ---------- */
-    header.hero { text-align: center; padding: 56px 0 48px; animation: rise .6s ease both; }
-    .avatar {
-      width: 76px; height: 76px; margin: 0 auto 20px;
-      border-radius: 50%;
-      display: grid; place-items: center;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      color: #fff; font-size: 30px; font-weight: 700;
-      box-shadow: 0 0 0 6px var(--bg);
-    }
-    .tag {
-      display: inline-block; font-size: 13px; color: var(--accent);
-      background: var(--accent-soft); border-radius: 999px; padding: 4px 14px;
-      margin-bottom: 14px;
-    }
-    h1 { font-size: clamp(30px, 6vw, 40px); letter-spacing: -0.02em; margin-bottom: 12px; }
-    h1 .grad {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .sub { color: var(--text-2); max-width: 480px; margin: 0 auto 24px; font-size: 15.5px; }
-    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; animation: rise .6s .15s ease both; }
-    .chip {
-      font-size: 13px; color: var(--text-2); background: var(--card);
-      border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px;
-      transition: border-color .15s, color .15s;
-    }
-    .chip:hover { border-color: var(--accent); color: var(--accent); }
-    .cta { display: flex; justify-content: center; gap: 12px; animation: rise .6s .25s ease both; }
+    h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .intro p { color: var(--text-2); margin-bottom: 14px; }
+    .intro p:first-of-type { color: var(--text); }
 
-    /* ---------- 按钮 ---------- */
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 14.5px; font-weight: 600; text-decoration: none;
-      padding: 10px 22px; border-radius: 999px; border: 1px solid transparent;
-      cursor: pointer; transition: background .15s, transform .12s, border-color .15s;
-    }
-    .btn:hover { transform: translateY(-1px); background: var(--accent-dark); color: #fff; }
-    .btn:active { transform: translateY(0); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-ghost { background: var(--card); color: var(--text-2); border-color: var(--border); }
-    .btn-ghost:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 
-    /* ---------- 特性卡片 ---------- */
-    .features {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-      margin: 8px 0 48px; animation: rise .6s .35s ease both;
-    }
-    .feature {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px 16px;
-      transition: transform .15s, box-shadow .15s;
-    }
-    .feature:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(15, 23, 42, .06); }
-    .feature .icon {
-      width: 38px; height: 38px; border-radius: 11px; font-size: 19px;
-      display: grid; place-items: center; margin-bottom: 10px;
-      background: var(--accent-soft);
-    }
-    .feature h3 { font-size: 14px; margin-bottom: 4px; }
-    .feature p { font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
+    h2 { font-size: 19px; font-weight: 700; margin-bottom: 14px; }
+    .note { color: var(--text-3); font-size: 14px; }
 
-    /* ---------- 分区标题 ---------- */
-    .section-title { display: flex; align-items: center; gap: 12px; margin: 40px 0 16px; }
-    .section-title h2 { font-size: 20px; letter-spacing: -0.01em; }
-    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
-    #about { animation: rise .6s ease both; }
-
-    /* ---------- 留言板 ---------- */
-    .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 24px;
-    }
-    .card p.intro { font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+    /* ---------- 留言 ---------- */
+    label { display: block; font-size: 13.5px; color: var(--text-2); margin-bottom: 6px; }
     input, textarea {
-      width: 100%; font-family: inherit; font-size: 14.5px; color: var(--text);
-      background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 10px 14px; margin-bottom: 14px;
-      transition: border-color .15s, box-shadow .15s;
+      width: 100%; font-family: inherit; font-size: 15px; color: var(--text);
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; margin-bottom: 12px;
+      transition: border-color .15s;
     }
-    input:focus, textarea:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { min-height: 80px; resize: vertical; }
+    .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+    button {
+      font-family: inherit; font-size: 14.5px; font-weight: 600;
+      background: var(--text); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 18px; cursor: pointer;
+      transition: opacity .15s;
     }
-    textarea { min-height: 90px; resize: vertical; }
-    .form-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
     .hint { font-size: 13px; color: var(--text-3); }
-    .hint.ok { color: var(--green); }
-    .hint.err { color: var(--red); }
+    .hint.ok { color: #15803d; }
+    .hint.err { color: #b91c1c; }
 
-    .messages { list-style: none; }
-    .msg {
-      display: flex; gap: 12px; padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      animation: rise .35s ease both;
-    }
+    .messages { list-style: none; margin-top: 16px; }
+    .msg { padding: 12px 0; border-bottom: 1px solid var(--border); }
     .msg:last-child { border-bottom: none; }
-    .msg .m-avatar {
-      flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-      display: grid; place-items: center; font-size: 15px; font-weight: 700;
-      color: #fff; background: linear-gradient(135deg, #6366f1, #a855f7);
-    }
-    .msg .m-body { min-width: 0; }
-    .msg .m-head { display: flex; align-items: baseline; gap: 8px; }
-    .msg .m-name { font-weight: 600; font-size: 14px; }
-    .msg .m-time { font-size: 12px; color: var(--text-3); }
-    .msg .m-text { font-size: 14px; color: var(--text-2); word-break: break-word; }
+    .m-head { display: flex; align-items: baseline; gap: 8px; }
+    .m-name { font-weight: 600; font-size: 14.5px; }
+    .m-time { font-size: 12.5px; color: var(--text-3); }
+    .m-text { font-size: 14.5px; color: var(--text-2); word-break: break-word; }
 
-    .empty {
-      border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
-      padding: 24px; text-align: center; color: var(--text-3); font-size: 14px;
-      margin-top: 4px;
-    }
+    .empty { color: var(--text-3); font-size: 14px; margin-top: 16px; }
 
     /* ---------- 页脚 ---------- */
     footer {
-      margin-top: 56px; text-align: center; color: var(--text-3); font-size: 13px;
+      border-top: 1px solid var(--border);
+      padding: 24px 0 40px; margin-top: 36px;
+      color: var(--text-3); font-size: 13px;
     }
-    footer code { background: var(--card); border: 1px solid var(--border); padding: 2px 7px; border-radius: 6px; font-size: 12px; }
 
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      * { animation: none !important; transition: none !important; }
-    }
-    @media (max-width: 560px) {
-      .features { grid-template-columns: 1fr; }
-      .nav-links a { padding: 6px 8px; }
+    @media (max-width: 480px) {
+      h1 { font-size: 26px; }
+      body { font-size: 15px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-
-    <nav>
-      <div class="brand"><span class="logo">m</span>molt</div>
-      <div class="nav-links">
-        <a href="#about">关于</a>
-        <a href="#guestbook">留言板</a>
-      </div>
-    </nav>
-
-    <header class="hero">
-      <div class="avatar">m</div>
-      <div class="tag">个人网站</div>
-      <h1>你好,我是<span class="grad"> molt</span></h1>
-      <p class="sub">这是我的数字小站:静态页面由全球 CDN 分发,留言板由边缘函数驱动,数据存在免费数据库里——没有花一分钱买服务器。</p>
-      <div class="chips">
-        <span class="chip">前端</span>
-        <span class="chip">折腾</span>
-        <span class="chip">记录生活</span>
-      </div>
-      <div class="cta">
-        <a class="btn btn-primary" href="#guestbook">给我留言 →</a>
-        <a class="btn btn-ghost" href="#about">了解这个站</a>
-      </div>
+  <div class="wrap">
+    <header>
+      <span class="site-name">【你的名字】</span>
+      <a href="#guestbook">留言板</a>
     </header>
 
-    <div class="features">
-      <div class="feature">
-        <div class="icon">⚡</div>
-        <h3>CDN 分发</h3>
-        <p>页面在全球边缘节点缓存,打开飞快,不占一分钱带宽。</p>
-      </div>
-      <div class="feature">
-        <div class="icon">⚙️</div>
-        <h3>边缘函数</h3>
-        <p>表单提交、数据库读写都在边缘节点瞬间完成,无需后台服务。</p>
-      </div>
-      <div class="feature">
-        <div class="icon">🌱</div>
-        <h3>零成本</h3>
-        <p>托管、数据库、CDN、SSL 全部来自免费额度,每年只花一个域名钱。</p>
-      </div>
-    </div>
+    <main>
+      <h1>你好,我是【你的名字】</h1>
 
-    <section id="about">
-      <div class="section-title"><h2>关于这个站</h2></div>
-      <div class="card">
-        <p class="intro">
-          它跑在 <strong>Cloudflare</strong> 的免费服务上:静态页面用 <code>Pages/Worker</code> 分发,
-          留言板由边缘函数 <code>Worker</code> 处理,数据存储在 <code>D1</code> 免费数据库。
-          没有服务器、没有运维,更新内容只需要 <code>git push</code>。
-        </p>
-      </div>
-    </section>
+      <section class="intro">
+        <p>（这一段的文字之后都可以换成你自己想说的,现在是我写的占位示例——）</p>
+        <p>这是我在网络上的一个小角落。电脑是旧的,网站是免费的,想法是新的。</p>
+        <p>以后这里大概会放一些写的东西、做的玩意儿,以及偶尔冒出来的奇怪想法。路过的朋友,随便看看就好。</p>
+      </section>
 
-    <section id="guestbook">
-      <div class="section-title"><h2>留言板</h2></div>
-      <div class="card">
-        <p class="intro">说点什么吧——每一条留言都会实时写进数据库,刷新也不会消失。</p>
-        <form id="form">
+      <hr>
+
+      <section id="guestbook">
+        <h2>留言板</h2>
+        <p class="note">有什么想说的,留一句吧。留言会存进数据库,刷新也不会丢。</p>
+        <form id="form" style="margin-top:16px;">
           <label for="name">名字(可不填)</label>
           <input id="name" type="text" maxlength="20" placeholder="你的昵称" autocomplete="nickname">
           <label for="text">想说的话</label>
-          <textarea id="text" maxlength="500" placeholder="写下你想说的话…" required></textarea>
-          <div class="form-row">
-            <button type="submit" id="btn" class="btn btn-primary">发送留言</button>
+          <textarea id="text" maxlength="500" placeholder="随便说点什么…" required></textarea>
+          <div class="form-foot">
+            <button type="submit" id="btn">发送</button>
             <span class="hint" id="hint"></span>
           </div>
         </form>
-      </div>
-      <div class="section-title"><h2>大家的留言</h2></div>
-      <div id="list"><div class="empty">加载中…</div></div>
-    </section>
+      </section>
+    </main>
 
     <footer>
-      © 2026 molt · 由 Cloudflare 免费全家桶驱动,每年成本 = 一个域名
+      <div id="list-wrap">大家的留言:<div id="list"><p class="empty">加载中…</p></div></div>
+      <p style="margin-top:28px;">© 2026 · 这个站跑在 Cloudflare 的免费服务上——论白嫖,我是认真的。</p>
     </footer>
-
   </div>
 
   <script>
@@ -290,36 +142,29 @@
     const btn = document.getElementById('btn');
     const list = document.getElementById('list');
 
-    // 防止用户输入被当作 HTML 注入(转义后再渲染)
+    // 用户输入渲染前转义,防止 XSS
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, c => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
       ));
     }
 
-    const C = [
-      '#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6'
-    ];
-
     async function load() {
       const res = await fetch('/api/guestbook');
       const rows = await res.json();
       if (!rows.length) {
-        list.innerHTML = '<div class="empty">还没有留言,来抢沙发吧 🛋️</div>';
+        list.innerHTML = '<p class="empty">一条留言还没有,来抢沙发吧。</p>';
         return;
       }
-      list.innerHTML = '<div class="card" style="padding:8px 24px 8px;"><ul class="messages">' +
-        rows.map((r, i) => `
+      list.innerHTML = '<ul class="messages">' +
+        rows.map(r => `
           <li class="msg">
-            <div class="m-avatar" style="background:linear-gradient(135deg, ${C[i % C.length]}, ${C[(i + 3) % C.length]})">${escapeHtml((r.name || '匿').charAt(0))}</div>
-            <div class="m-body">
-              <div class="m-head">
-                <span class="m-name">${escapeHtml(r.name)}</span>
-                <span class="m-time">${escapeHtml(r.created_at || '')}</span>
-              </div>
-              <div class="m-text">${escapeHtml(r.text)}</div>
+            <div class="m-head">
+              <span class="m-name">${escapeHtml(r.name)}</span>
+              <span class="m-time">${escapeHtml(r.created_at || '')}</span>
             </div>
-          </li>`).join('') + '</ul></div>';
+            <div class="m-text">${escapeHtml(r.text)}</div>
+          </li>`).join('') + '</ul>';
     }
 
     form.addEventListener('submit', async (e) => {
@@ -332,15 +177,15 @@
         const res = await fetch('/api/guestbook', { method: 'POST', body });
         if (res.ok) {
           text.value = '';
-          hint.textContent = '✅ 留言成功!';
+          hint.textContent = '✅ 已收到。';
           hint.className = 'hint ok';
           load();
         } else {
-          hint.textContent = '❌ 发送失败,请稍后重试';
+          hint.textContent = '发送失败,稍后再试。';
           hint.className = 'hint err';
         }
       } catch {
-        hint.textContent = '❌ 网络错误,请稍后再试';
+        hint.textContent = '网络似乎不太好,稍后再试。';
         hint.className = 'hint err';
       }
       btn.disabled = false;
