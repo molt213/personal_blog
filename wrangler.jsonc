@@ -12,5 +12,11 @@
       "database_name": "my-db",
       "database_id": "3f5f3a58-cf8b-4f21-a4a9-54b469e3c291"
     }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "ce473681ded24830bf89a98676ee5ffd"
+    }
   ]
 }
