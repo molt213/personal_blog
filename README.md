@@ -45,6 +45,10 @@ CREATE TABLE IF NOT EXISTS messages (
 2. 点 **Add binding** → 类型选 **D1 database** → 变量名**必须填 `DB`**(代码里就叫这个名字)→ 选择数据库 `my-db` → **Save**。
 3. 绑定后需要重新部署一次才生效:进 **Deployments** → 点当前版本右边的 **⋯** → **Retry deployment**。
 
+> ⚠️ **如果你是通过 Workers 的"连接到 Git"方式部署的**(网址以 `.workers.dev` 结尾,界面上看到的是"重试构建"):
+> 后台加绑定**不会生效**,因为每次构建都是从代码仓库打包的。这时绑定必须写在仓库根目录的 `wrangler.jsonc` 里——
+> 本项目**已经配好了**(包含你的 D1 数据库 ID),改动后 `git push` 就会自动带着绑定重新构建,后台的"无连接"状态会变成"已连接"。
+
 ## 第 5 步:验收(2 分钟)
 
 打开你的 `https://my-site.pages.dev`,发一条留言,刷新页面——留言还在,就说明整条链路通了:
