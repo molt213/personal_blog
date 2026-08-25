@@ -9,9 +9,9 @@ Cloudflare Pages(托管)+ Functions(边缘函数)+ D1(数据库),一分钱不花
 
 ## 第 1 步:把代码放进 GitHub(5 分钟)
 
-1. 打开 https://github.com/new ,仓库名随意(比如 `my-site`),选 **Public**,点击 **Create repository**。
-2. 新页面里点 **uploading an existing file** → 把本文件夹里的 `index.html` 和 `functions` 文件夹拖进去 → 点 **Commit changes**。
-   (网页里拖拽上传时,把 `functions/api/guestbook.js` 一起拖上,保持目录结构不变。)
+> 本仓库已经完成这一步(是直接 `git push` 上去的),**跳过**,从这里开始直接看第 2 步。
+
+新项目的话:在 https://github.com/new 建仓库(选 Public),然后任选一种方式把 `index.html` 和 `functions` 文件夹放进去:
 
 ## 第 2 步:部署到 Cloudflare Pages(5 分钟)
 
