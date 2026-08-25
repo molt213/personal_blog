@@ -18,6 +18,7 @@ export default {
         const name = (rawName && rawName !== "undefined") ? rawName.slice(0, 20) : "匿名";
         const text = (form.get("text") || "").trim().slice(0, 500);
         if (!text) return Response.json({ error: "留言不能为空" }, { status: 400 });
+
         await env.DB
           .prepare("INSERT INTO messages (name, text) VALUES (?, ?)")
           .bind(name, text)
@@ -62,23 +63,35 @@ async function handleViews(env) {
 const BREVO_API_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 
 async function notifyOwner(env, { name, text }) {
-  const key = env.BREVO_API_KEY;
-  if (!key) return;
   const owner = "wurui213@molt213.top";
+  const debug = async (msg) => {
+    try { if (env.KV) await env.KV.put("notify_debug", `${new Date().toISOString()} ${msg}`); } catch {}
+  };
+  const key = env.BREVO_API_KEY;
+  if (!key) { await debug("no BREVO_API_KEY secret found"); return; }
   const html =
     `<p>你的博客收到一条新留言:</p>` +
     `<p><b>${esc(name)}</b> 说:</p>` +
     `<blockquote style="border-left:3px solid #c2410c;padding-left:12px;color:#5d564e;">${esc(text)}</blockquote>`;
-  await fetch(BREVO_API_ENDPOINT, {
-    method: "POST",
-    headers: { "api-key": key, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sender: { email: owner, name: "博客留言通知" },
-      to: [{ email: owner }],
-      subject: `新留言: ${name}`,
-      htmlContent: html,
-    }),
-  });
+  try {
+    const resp = await fetch(BREVO_API_ENDPOINT, {
+      method: "POST",
+      headers: { "api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: { email: owner, name: "博客留言通知" },
+        to: [{ email: owner }],
+        subject: `新留言: ${name}`,
+        htmlContent: html,
+      }),
+    });
+    if (!resp.ok) {
+      await debug(`Brevo HTTP ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
+    } else {
+      await debug("sent ok");
+    }
+  } catch (e) {
+    await debug(`fetch error: ${String(e)}`);
+  }
 }
 
 function esc(s) {
