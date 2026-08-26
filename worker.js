@@ -39,20 +39,34 @@ export default {
 }
 
 // 校验 Turnstile 人机验证;未配置密钥时放行,避免误伤
+const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_ACTION = "guestbook";
+const TURNSTILE_HOSTNAMES = ["molt213.top", "personal-blog.wurui640.workers.dev"];
+
 async function verifyTurnstile(env, token, ip) {
-  if (!env.TURNSTILE_SECRET) return true;
-  if (!token) return false;
+  if (!env.TURNSTILE_SECRET) return true; // 密钥未配,先放行不影响留言
+  if (typeof token !== "string" || token.length === 0 || token.length > 2048) return false;
+
+  // 只允许访问 Cloudflare 官方 HTTPS 校验接口,拒绝协议不符/任何非白名单主机
+  const url = new URL(TURNSTILE_VERIFY_URL);
+  if (url.protocol !== "https:" || url.hostname !== "challenges.cloudflare.com") return false;
+  if (new URL(TURNSTILE_VERIFY_URL).pathname !== "/turnstile/v0/siteverify") return false;
+
   try {
-    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    const resp = await fetch(url, {
       method: "POST",
       body: new URLSearchParams({
         secret: env.TURNSTILE_SECRET,
         response: token,
         remoteip: ip || "",
       }),
+      signal: AbortSignal.timeout(10_000),
     });
     const data = await resp.json();
-    return data.success === true;
+    // 三方条件全过才放行:校验成功 + action 匹配 + 发起页面域名在白名单里
+    return data.success === true
+      && data.action === TURNSTILE_ACTION
+      && TURNSTILE_HOSTNAMES.includes(data.hostname);
   } catch {
     return false;
   }

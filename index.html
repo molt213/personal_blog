@@ -6,7 +6,7 @@
   <meta name="description" content="【你的名字】的小站 — 写点东西的地方">
   <title>【你的名字】· 小站</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer onload="window.__tsInit && window.__tsInit()"></script>
 </head>
 <body>
   <div class="wrap">
@@ -39,7 +39,7 @@
           <input id="name" type="text" maxlength="20" placeholder="你的昵称" autocomplete="nickname">
           <label for="text">想说的话</label>
           <textarea id="text" maxlength="500" placeholder="随便说点什么…" required></textarea>
-          <div class="cf-turnstile" style="margin:12px 0;" data-sitekey="REPLACE_WITH_SITEKEY"></div>
+          <div id="turnstile-box" style="margin:12px 0;"></div>
           <div class="form-foot">
             <button type="submit" id="btn">发送</button>
             <span class="hint" id="hint"></span>
@@ -62,6 +62,15 @@
     const list = document.getElementById('list');
     const name = document.getElementById('name');
     const text = document.getElementById('text');
+    const sitekey = '0x4AAAAAAEcTHJtlmeUlYK7S';
+
+    // Turnstile:页面不跳转,所以脚本加载后显式渲染,保留句柄供提交后重置
+    let tsWidgetId = null;
+    window.__tsInit = () => {
+      if (window.turnstile && tsWidgetId === null) {
+        tsWidgetId = turnstile.render('turnstile-box', { sitekey, action: 'guestbook' });
+      }
+    };
 
     // 用户输入渲染前转义,防止 XSS
     function escapeHtml(s) {
@@ -90,7 +99,7 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const token = (window.turnstile && turnstile.getResponse()) || '';
+      const token = (window.turnstile && tsWidgetId !== null) ? turnstile.getResponse(tsWidgetId) : '';
       if (!token) {
         hint.textContent = '请先完成人机验证';
         hint.className = 'hint err';
@@ -106,7 +115,7 @@
           text.value = '';
           hint.textContent = '✅ 已收到。';
           hint.className = 'hint ok';
-          if (window.turnstile) turnstile.reset();
+          if (window.turnstile && tsWidgetId !== null) turnstile.reset(tsWidgetId);
           load();
         } else {
           const err = await res.json().catch(() => ({}));
