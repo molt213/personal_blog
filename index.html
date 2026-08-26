@@ -6,6 +6,7 @@
   <meta name="description" content="【你的名字】的小站 — 写点东西的地方">
   <title>【你的名字】· 小站</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <div class="wrap">
@@ -38,6 +39,7 @@
           <input id="name" type="text" maxlength="20" placeholder="你的昵称" autocomplete="nickname">
           <label for="text">想说的话</label>
           <textarea id="text" maxlength="500" placeholder="随便说点什么…" required></textarea>
+          <div class="cf-turnstile" style="margin:12px 0;" data-sitekey="REPLACE_WITH_SITEKEY"></div>
           <div class="form-foot">
             <button type="submit" id="btn">发送</button>
             <span class="hint" id="hint"></span>
@@ -88,7 +90,13 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const body = new URLSearchParams({ name: name.value, text: text.value });
+      const token = (window.turnstile && turnstile.getResponse()) || '';
+      if (!token) {
+        hint.textContent = '请先完成人机验证';
+        hint.className = 'hint err';
+        return;
+      }
+      const body = new URLSearchParams({ name: name.value, text: text.value, token });
       btn.disabled = true;
       hint.textContent = '发送中…';
       hint.className = 'hint';
@@ -98,9 +106,11 @@
           text.value = '';
           hint.textContent = '✅ 已收到。';
           hint.className = 'hint ok';
+          if (window.turnstile) turnstile.reset();
           load();
         } else {
-          hint.textContent = '发送失败,稍后再试。';
+          const err = await res.json().catch(() => ({}));
+          hint.textContent = err.error || '发送失败,稍后再试。';
           hint.className = 'hint err';
         }
       } catch {

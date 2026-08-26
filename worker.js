@@ -16,6 +16,10 @@ export default {
         const name = (rawName && rawName !== "undefined") ? rawName.slice(0, 20) : "匿名";
         const text = (form.get("text") || "").trim().slice(0, 500);
         if (!text) return Response.json({ error: "留言不能为空" }, { status: 400 });
+        const token = form.get("token") || "";
+        if (!(await verifyTurnstile(env, token, request.headers.get("CF-Connecting-IP")))) {
+          return Response.json({ error: "人机验证没通过,刷新一下再试" }, { status: 400 });
+        }
 
         await env.DB
           .prepare("INSERT INTO messages (name, text) VALUES (?, ?)")
@@ -31,6 +35,26 @@ export default {
     }
 
     return new Response("Not Found", { status: 404 });
+  }
+}
+
+// 校验 Turnstile 人机验证;未配置密钥时放行,避免误伤
+async function verifyTurnstile(env, token, ip) {
+  if (!env.TURNSTILE_SECRET) return true;
+  if (!token) return false;
+  try {
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: new URLSearchParams({
+        secret: env.TURNSTILE_SECRET,
+        response: token,
+        remoteip: ip || "",
+      }),
+    });
+    const data = await resp.json();
+    return data.success === true;
+  } catch {
+    return false;
   }
 }
 
