@@ -1,5 +1,5 @@
 // ======== 个人博客: 页面 + 留言 + 访问统计 + 邮件通知 ========
-// 依赖绑定: D1(名 DB)、KV(名 KV)、密钥(名 BREVO_API_KEY)
+// 依赖绑定: D1(名 DB)、KV(名 KV)、密钥(名 BREVO_API_KEY、TURNSTILE_SECRET)
 
 const INDEX_HTML = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -9,6 +9,7 @@ const INDEX_HTML = `<!DOCTYPE html>
   <meta name="description" content="一个记录生活、想法与正在发生之事的小站。">
   <title>我的小站 · 记录正在发生的事</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer onload="window.initTurnstile && window.initTurnstile()"></script>
 </head>
 <body>
   <div class="site-shell">
@@ -45,6 +46,7 @@ const INDEX_HTML = `<!DOCTYPE html>
         <form class="guestbook-form" id="form">
           <div class="field-row"><label for="name">怎么称呼你 <small>选填</small></label><input id="name" name="name" type="text" maxlength="20" placeholder="你的昵称"></div>
           <div class="field-row"><label for="text">想说的话</label><textarea id="text" name="text" maxlength="500" placeholder="写点什么吧…" required></textarea></div>
+          <div class="turnstile-wrap"><div id="turnstile-box"></div></div>
           <div class="form-foot"><p class="form-hint" id="hint" role="status" aria-live="polite">你的留言会被认真读到。</p><button type="submit" class="send-button" id="btn">发送留言 <span aria-hidden="true">↗</span></button></div>
         </form>
       </section>
@@ -68,6 +70,14 @@ const INDEX_HTML = `<!DOCTYPE html>
     var list = document.getElementById("list");
     var nameEl = document.getElementById("name");
     var textEl = document.getElementById("text");
+    var TURNSTILE_SITE_KEY = "0x4AAAAAAEcTHJtlmeUlYK7S";
+    var turnstileWidgetId = null;
+    window.initTurnstile = function () {
+      if (window.turnstile && turnstileWidgetId === null) {
+        turnstileWidgetId = window.turnstile.render("turnstile-box", { sitekey: TURNSTILE_SITE_KEY, action: "guestbook" });
+      }
+    };
+    if (window.turnstile) window.initTurnstile();
     function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
     function formatDate(value) { return value ? String(value).replace(" ", " · ") : ""; }
     function loadMessages() {
@@ -86,11 +96,17 @@ const INDEX_HTML = `<!DOCTYPE html>
     }
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      var body = new URLSearchParams({ name: nameEl.value, text: textEl.value });
+      var token = (window.turnstile && turnstileWidgetId !== null) ? window.turnstile.getResponse(turnstileWidgetId) : "";
+      if (!token) {
+        hint.textContent = "请先完成人机验证。";
+        hint.className = "form-hint is-error";
+        return;
+      }
+      var body = new URLSearchParams({ name: nameEl.value, text: textEl.value, token: token });
       btn.disabled = true; hint.textContent = "正在送达…"; hint.className = "form-hint";
       fetch("/api/guestbook", { method: "POST", body: body }).then(function (response) {
         if (!response.ok) throw new Error("submit failed");
-        textEl.value = ""; hint.textContent = "已收到，感谢你留下这句话。"; hint.className = "form-hint is-success"; loadMessages();
+        textEl.value = ""; hint.textContent = "已收到，感谢你留下这句话。"; hint.className = "form-hint is-success"; if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId); loadMessages();
       }).catch(function () {
         hint.textContent = "没有发送成功，请稍后再试。"; hint.className = "form-hint is-error";
       }).finally(function () { btn.disabled = false; });
@@ -118,6 +134,8 @@ const STYLE_CSS = `
 @media (max-width:460px) { .site-shell { width:min(100% - 24px,560px); }.site-header { gap:12px; }.brand { font-size:16px; }.nav-cta { padding:9px 11px; font-size:12px; }.hero { margin-top:12px; }.hero-copy,.hero-note,.guestbook-section { border-radius:20px; }.hero-copy { min-height:375px; padding:33px 28px; }.hero-description { font-size:15px; }.section-heading,.messages-heading { align-items:flex-start; flex-direction:column; gap:8px; }.post-content { padding:29px; }.guestbook-section { padding:29px 22px; gap:33px; }.guestbook-form { padding:21px; }.form-foot { align-items:flex-start; flex-direction:column; }.send-button { width:100%; }.site-footer { align-items:flex-start; flex-direction:column; padding-bottom:32px; }.footer-right { text-align:left; } }
 `;
 
+const TURNSTILE_CSS = `.turnstile-wrap{margin-top:18px;min-height:65px;overflow:hidden;border-radius:11px;background:#fbfcfe;}`;
+
 const POST_HTML = `<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>第一篇：小站开张 · 我的小站</title><link rel="stylesheet" href="/style.css"></head>
 <body><div class="site-shell"><header class="site-header"><a class="brand" href="/" aria-label="回到首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>我的小站</span></a><nav aria-label="主导航"><a class="nav-cta" href="/">返回首页 <span aria-hidden="true">←</span></a></nav></header>
@@ -131,7 +149,7 @@ export default {
     const url = new URL(request.url);
     const p = url.pathname;
     if (p === "/") return new Response(INDEX_HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } });
-    if (p === "/style.css") return new Response(STYLE_CSS, { headers: { "Content-Type": "text/css; charset=utf-8" } });
+    if (p === "/style.css") return new Response(STYLE_CSS + TURNSTILE_CSS, { headers: { "Content-Type": "text/css; charset=utf-8" } });
     if (p === "/posts/hello-world.html") return new Response(POST_HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } });
     if (p === "/api/guestbook") {
       if (request.method === "GET") {
@@ -144,6 +162,10 @@ export default {
         const name = (rawName && rawName !== "undefined") ? rawName.slice(0, 20) : "匿名";
         const text = (form.get("text") || "").trim().slice(0, 500);
         if (!text) return Response.json({ error: "留言不能为空" }, { status: 400 });
+        const token = form.get("token") || "";
+        if (!(await verifyTurnstile(env, token, request.headers.get("CF-Connecting-IP")))) {
+          return Response.json({ error: "人机验证没通过，请刷新后再试。" }, { status: 400 });
+        }
         await env.DB.prepare("INSERT INTO messages (name, text) VALUES (?, ?)").bind(name, text).run();
         notifyOwner(env, { name, text }).catch(() => {});
         return Response.json({ ok: true });
@@ -153,6 +175,37 @@ export default {
     return new Response("Not Found", { status: 404 });
   }
 };
+
+const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_ACTION = "guestbook";
+const TURNSTILE_HOSTNAMES = ["molt213.top", "personal-blog.wurui640.workers.dev"];
+
+async function verifyTurnstile(env, token, ip) {
+  if (!env.TURNSTILE_SECRET) return true;
+  if (typeof token !== "string" || token.length === 0 || token.length > 2048) return false;
+
+  const url = new URL(TURNSTILE_VERIFY_URL);
+  if (url.protocol !== "https:" || url.hostname !== "challenges.cloudflare.com") return false;
+  if (url.pathname !== "/turnstile/v0/siteverify") return false;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: new URLSearchParams({
+        secret: env.TURNSTILE_SECRET,
+        response: token,
+        remoteip: ip || ""
+      }),
+      signal: AbortSignal.timeout(10_000)
+    });
+    const data = await response.json();
+    return data.success === true &&
+      data.action === TURNSTILE_ACTION &&
+      TURNSTILE_HOSTNAMES.includes(data.hostname);
+  } catch (error) {
+    return false;
+  }
+}
 
 async function handleViews(env) {
   try {
