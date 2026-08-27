@@ -1,8 +1,8 @@
 export function renderPostsPage(posts) {
   return `
-<section class="page-heading"><p class="eyebrow"><i></i>WRITING</p><h1>最近写下的</h1><p>暂时放下完成度，先把值得记住的部分留下来。</p></section>
+<section class="page-heading"><p class="eyebrow"><i></i>WRITING</p><h1>随记</h1><p>想到什么写什么</p></section>
 <section class="post-list">${posts.map(renderPostCard).join("")}</section>
-<p class="quiet">更多文字正在路上。也许很快，也许要等一个刚刚好的傍晚。</p>`;
+<p class="quiet">更多文字正在路上。也许很快，也许很慢，取决于我什么时候想得起来。</p>`;
 }
 
 function renderPostCard(post, index) {

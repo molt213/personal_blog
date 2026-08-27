@@ -21,7 +21,7 @@ export default {
 
     if (path === "/posts") {
       return html(renderPage({
-        title: "文章",
+        title: "随记",
         active: "posts",
         content: renderPostsPage(POSTS),
         site: SITE
