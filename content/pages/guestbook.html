@@ -1,0 +1,10 @@
+<section class="page-heading"><p class="eyebrow"><i></i>GUESTBOOK</p><h1>路过的话，<br>留一句吧。</h1><p>一个问候、一段感受，或者一句「我来过」，都会被认真读到。</p></section>
+<section class="guestbook-layout">
+  <form class="message-form" id="form">
+    <div class="form-intro"><b>✎</b><div><h2>写一条留言</h2><p>不需要想得很完整。</p></div></div>
+    <label for="name">怎么称呼你 <small>选填</small></label><input id="name" type="text" maxlength="20" autocomplete="nickname" placeholder="你的昵称">
+    <label for="text">想说的话</label><textarea id="text" maxlength="500" required placeholder="写点什么吧…"></textarea>
+    <div class="form-foot"><span id="hint" role="status" aria-live="polite">发送后会出现在右边。</span><button id="btn" type="submit">发送留言　↗</button></div>
+  </form>
+  <section class="messages"><div class="section-head"><div><p>MESSAGES</p><h2>大家留下的话</h2></div><span>来自路过的朋友</span></div><div id="list" class="message-list" aria-live="polite"><p class="loading">正在读取留言…</p></div></section>
+</section>
