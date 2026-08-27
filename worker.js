@@ -6,6 +6,7 @@ import { POSTS } from "./content/posts/index.js";
 import { renderPage } from "./src/site/layout.js";
 import { renderPostsPage } from "./src/site/posts-page.js";
 import { renderArticlePage } from "./src/site/article-page.js";
+import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
 import { recordVisit } from "./src/api/views.js";
 
@@ -17,14 +18,18 @@ const PAGES = {
 
 export default {
   async fetch(request, env) {
-    const path = new URL(request.url).pathname;
+    const { pathname: path } = new URL(request.url);
+
+    if (path === "/robots.txt") return text(renderRobotsTxt(SITE.url));
+    if (path === "/sitemap.xml") return xml(renderSitemap(SITE.url, POSTS));
 
     if (path === "/posts") {
       return html(renderPage({
         title: "随记",
         active: "posts",
         content: renderPostsPage(POSTS),
-        site: SITE
+        site: SITE,
+        canonicalUrl: `${SITE.url}${path}`
       }));
     }
 
@@ -34,12 +39,13 @@ export default {
         title: post.title,
         active: "posts",
         content: renderArticlePage(post),
-        site: SITE
+        site: SITE,
+        canonicalUrl: `${SITE.url}${path}`
       }));
     }
 
     const page = PAGES[path];
-    if (page) return html(renderPage({ ...page, site: SITE }));
+    if (page) return html(renderPage({ ...page, site: SITE, canonicalUrl: `${SITE.url}${path}` }));
 
     if (path === "/api/guestbook") {
       if (request.method === "GET") return Response.json(await getGuestbookMessages(env));
@@ -57,4 +63,12 @@ export default {
 
 function html(content) {
   return new Response(content, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+}
+
+function text(content) {
+  return new Response(content, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
+function xml(content) {
+  return new Response(content, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
 }

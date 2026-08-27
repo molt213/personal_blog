@@ -1,6 +1,6 @@
 import { NAVIGATION } from "../../content/site.js";
 
-export function renderPage({ title, active, content, site, guestbook = false }) {
+export function renderPage({ title, active, content, site, canonicalUrl, guestbook = false }) {
   const nav = NAVIGATION.map(item =>
     `<a class="nav-link${item.id === active ? " active" : ""}" href="${item.href}"><span aria-hidden="true">${item.icon}</span>${item.label}</a>`
   ).join("");
@@ -11,6 +11,7 @@ export function renderPage({ title, active, content, site, guestbook = false }) 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="${site.description}">
+  ${canonicalUrl ? `<link rel="canonical" href="${canonicalUrl}">` : ""}
   <title>${title} · ${site.name}</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/site.js" defer></script>

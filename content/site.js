@@ -1,6 +1,7 @@
 // 站点的基础信息。想改网站名称、简介、邮箱或开站日期时，只需要改这里。
 export const SITE = {
   name: "molt213的个人博客",
+  url: "https://molt213.top",
   description: "想不到要写什么description",
   tagline: "个人的胡思乱想",
   contactEmail: "wurui213@163.com",
