@@ -1,9 +1,10 @@
-export async function recordVisit(env, launchDate) {
+export async function recordVisit(env, launchDate, countVisit = false) {
   try {
     if (!env.KV) return { ok: false, error: "no-kv-binding" };
 
-    const views = parseInt((await env.KV.get("views")) || "0", 10) + 1;
-    await env.KV.put("views", String(views));
+    const storedViews = parseInt((await env.KV.get("views")) || "0", 10);
+    const views = countVisit ? storedViews + 1 : storedViews;
+    if (countVisit) await env.KV.put("views", String(views));
 
     let birthday = await env.KV.get("birthday");
     if (!birthday) {

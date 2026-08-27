@@ -56,7 +56,12 @@ export default {
       return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, POST" } });
     }
 
-    if (path === "/api/views") return Response.json(await recordVisit(env, SITE.launchDate));
+    if (path === "/api/views") {
+      if (request.method !== "GET" && request.method !== "POST") {
+        return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, POST" } });
+      }
+      return Response.json(await recordVisit(env, SITE.launchDate, request.method === "POST"));
+    }
     return new Response("Not Found", { status: 404 });
   }
 };
