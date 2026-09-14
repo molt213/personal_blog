@@ -18,4 +18,6 @@
 4. 照着已有文章的格式新增一项；其中 `slug` 要和文件名一致（不带 `.html`），最后的 `content` 填 `firstAutumn`。
 5. 提交到 GitHub。Cloudflare 会自动部署。
 
+> 文章列表的封面会默认取正文里的第一张图片；想指定别的图，在 `posts/index.js` 的对应条目里加 `cover: "图片地址"`。
+
 不要修改 `src/` 或 `worker.js`，除非要改变网站功能或网址规则。

@@ -2,6 +2,7 @@ import Mewtype from "./Mewtype.html";
 import kanc_26_9 from "./kanc_26_9.html";
 
 // 新文章按这个格式加到最前面，文章列表与网址会自动生成。
+// 列表封面默认取文章正文里的第一张图片；想指定别的图，在条目里加 cover: "图片地址"。
 export const POSTS = [
   {
     slug: "kanc_26_9",
