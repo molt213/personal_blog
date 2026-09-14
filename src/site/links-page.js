@@ -1,6 +1,6 @@
 export function renderLinksPage(links, site) {
   const cards = links
-    .filter(link => /^https?:\/\//i.test(String(link.url || "")))
+    .filter(link => isAllowedUrl(link.url))
     .map(renderLinkCard)
     .join("");
 
@@ -14,7 +14,10 @@ export function renderLinksPage(links, site) {
 
 function renderLinkCard(link) {
   const url = String(link.url);
-  const badge = escapeHtml(String(link.icon || link.name || "·").trim().charAt(0) || "·").toUpperCase();
+  const avatar = isAllowedUrl(link.avatar) ? String(link.avatar) : "";
+  const badge = avatar
+    ? `<img src="${escapeHtml(avatar)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+    : escapeHtml(String(link.icon || link.name || "·").trim().charAt(0) || "·").toUpperCase();
   return `
 <a class="link-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
   <span class="link-top"><b class="link-badge" aria-hidden="true">${badge}</b><strong>${escapeHtml(link.name || "")}</strong></span>
@@ -29,6 +32,38 @@ function hostnameOf(url) {
   } catch {
     return "";
   }
+}
+
+// 只放行 http/https 的公网地址:拒绝 localhost、环回、私有与保留地址
+function isAllowedUrl(value) {
+  let url;
+  try {
+    url = new URL(String(value || ""));
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+
+  const host = url.hostname.toLowerCase().replace(/^\[(.*)\]$/, "$1");
+  if (!host) return false;
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return false;
+
+  if (host.includes(":")) {
+    if (host === "::" || host === "::1") return false;
+    if (/^fe80:/.test(host) || /^f[cd][0-9a-f]{2}:/.test(host)) return false;
+    return true;
+  }
+
+  const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!v4) return true;
+  const [a, b] = [Number(v4[1]), Number(v4[2])];
+  if (a === 0 || a === 10 || a === 127) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && b === 168) return false;
+  if (a >= 224) return false;
+  return true;
 }
 
 function escapeHtml(value) {
