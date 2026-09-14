@@ -11,6 +11,7 @@ export const SITE = {
 export const NAVIGATION = [
   { id: "home", href: "/", icon: "⌂", label: "首页" },
   { id: "posts", href: "/posts", icon: "✦", label: "随记" },
+  { id: "links", href: "/links", icon: "❖", label: "友情链接" },
   { id: "guestbook", href: "/guestbook", icon: "✎", label: "留言板" },
   { id: "about", href: "/about", icon: "◎", label: "关于" }
 ];

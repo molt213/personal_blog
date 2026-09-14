@@ -16,6 +16,7 @@ public/         网站的外观和浏览器交互
 | 改网站名称、邮箱、简介 | `content/site.js` |
 | 改首页、关于页、留言页的文字 | `content/pages/` |
 | 写新文章 | `content/posts/` |
+| 加友情链接 | `content/links.js` |
 | 改颜色、字号、页面间距 | `public/style.css` |
 
 更具体的写文章说明放在 [`content/README.md`](content/README.md)。
@@ -26,7 +27,8 @@ public/         网站的外观和浏览器交互
 worker.js                 只负责把网址分发到页面或接口
 content/
   site.js                 网站基础信息
-  pages/                  首页、关于页、留言页的文案
+  links.js                友情链接列表
+  pages/                  首页、关于页、留言页、友链页的文案
   posts/                  每篇文章的正文和文章资料
 public/
   style.css               所有视觉样式

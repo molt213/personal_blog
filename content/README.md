@@ -4,6 +4,7 @@
 
 - `文章写作速查表.md`：写文章时可直接复制的常用 HTML 模板。
 - `site.js`：网站名称、简介、联系邮箱与开站日期。
+- `links.js`：友情链接列表，加友链改这里。
 - `pages/home.html`：首页文案。
 - `pages/about.html`：关于页面文案。
 - `pages/guestbook.html`：留言板页面上的说明文字。

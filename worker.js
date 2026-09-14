@@ -2,10 +2,13 @@ import { SITE } from "./content/site.js";
 import homeContent from "./content/pages/home.html";
 import guestbookContent from "./content/pages/guestbook.html";
 import aboutContent from "./content/pages/about.html";
+import linksContent from "./content/pages/links.html";
 import { POSTS } from "./content/posts/index.js";
+import { LINKS } from "./content/links.js";
 import { renderPage } from "./src/site/layout.js";
 import { renderPostsPage } from "./src/site/posts-page.js";
 import { renderArticlePage } from "./src/site/article-page.js";
+import { renderLinksPage } from "./src/site/links-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
 import { recordVisit } from "./src/api/views.js";
@@ -39,6 +42,16 @@ export default {
         title: post.title,
         active: "posts",
         content: renderArticlePage(post),
+        site: SITE,
+        canonicalUrl: `${SITE.url}${path}`
+      }));
+    }
+
+    if (path === "/links") {
+      return html(renderPage({
+        title: "友情链接",
+        active: "links",
+        content: linksContent + renderLinksPage(LINKS, SITE),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
