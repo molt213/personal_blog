@@ -6,10 +6,10 @@ export function renderPostsPage(posts) {
 }
 
 function renderPostCard(post, index) {
-  const label = escapeHtml(post.artLabel).replace(/\n/g, "<br>");
+  const label = escapeHtml(post.artLabel || post.title || "").replace(/\n/g, "<br>");
   const number = String(index + 1).padStart(2, "0");
   const url = `/posts/${post.slug}.html`;
-  const cover = coverOf(post);
+  const cover = String(post.cover || "");
   const art =
     `<a class="post-art${cover ? " has-cover" : ""}" href="${url}" aria-label="阅读文章：${escapeHtml(post.title)}">` +
     (cover
@@ -21,24 +21,6 @@ function renderPostCard(post, index) {
   ${art}
   <div class="post-copy"><p><b>${escapeHtml(post.category)}</b>　·　${escapeHtml(post.date)}</p><h2><a href="${url}">${escapeHtml(post.title)}</a></h2><span>${escapeHtml(post.excerpt)}</span><a class="arrow" href="${url}">阅读这篇　→</a></div>
 </article>`;
-}
-
-// 封面:优先用条目里指定的 cover,否则取文章正文的第一张图片
-function coverOf(post) {
-  return pickImageUrl(post.cover) || pickImageUrl(firstImageOf(post.content));
-}
-
-function firstImageOf(html) {
-  const match = String(html || "").match(/<img\b[^>]*?\bsrc\s*=\s*("([^"]*)"|'([^']*)')/i);
-  return match ? (match[2] ?? match[3]) : "";
-}
-
-// 站内路径(/开头)或站外 http(s) 地址才可用,其余忽略
-function pickImageUrl(value) {
-  const url = String(value || "").trim();
-  if (!url) return "";
-  if (url.startsWith("/")) return url;
-  return /^https?:\/\//i.test(url) ? url : "";
 }
 
 function escapeHtml(value) {

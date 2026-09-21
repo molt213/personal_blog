@@ -1,27 +1,5 @@
-import Mewtype from "./Mewtype.html";
-import kanc_26_9 from "./kanc_26_9.html";
+// 文章资料放在 posts.json，正文放在 public/posts/<slug>.html。
+// 用 /admin 在线后台写文章时，这两个文件会自动更新，不需要手改这个文件。
+import posts from "./posts.json";
 
-// 新文章按这个格式加到最前面，文章列表与网址会自动生成。
-// 列表封面默认取文章正文里的第一张图片；想指定别的图，在条目里加 cover: "图片地址"。
-export const POSTS = [
-  {
-    slug: "kanc_26_9",
-    category: "随记",
-    date: "2026.09.02",
-    title: "舰队collection26年夏活丁个人记录贴",
-    excerpt: "记录消耗以及出货情况",
-    lead: "记录消耗以及出货情况",
-    artLabel: "舰c26年\n夏活丁",
-    content: kanc_26_9
-  },
-  {
-    slug: "Mewtype",
-    category: "随记",
-    date: "2026.08.27",
-    title: "梦限大成员前世考证与薇欧拉角色形象的映射",
-    excerpt: "如题",
-    lead: "仅作个人的一些猜想",
-    artLabel: "Mew\ntype",
-    content: Mewtype
-  }
-];
+export const POSTS = posts;

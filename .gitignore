@@ -1,5 +1,10 @@
 # 本机工具产生的数据,不进仓库
 .mimosa/
+.zcode/
+.zcodeignore
+
+# 本机预览用的密钥(GitHub Token 等),绝不进仓库
+.dev.vars
 
 # 常见开发产物
 node_modules/

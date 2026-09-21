@@ -9,9 +9,12 @@ import { renderPage } from "./src/site/layout.js";
 import { renderPostsPage } from "./src/site/posts-page.js";
 import { renderArticlePage } from "./src/site/article-page.js";
 import { renderLinksPage } from "./src/site/links-page.js";
+import { renderAdminPage } from "./src/site/admin-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
 import { recordVisit } from "./src/api/views.js";
+import { readPostBody, withCovers } from "./src/services/post-content.js";
+import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft } from "./src/api/admin.js";
 
 const PAGES = {
   "/": { title: "首页", active: "home", content: homeContent },
@@ -27,10 +30,11 @@ export default {
     if (path === "/sitemap.xml") return xml(renderSitemap(SITE.url, POSTS));
 
     if (path === "/posts") {
+      const posts = await withCovers(env, request, POSTS);
       return html(renderPage({
         title: "随记",
         active: "posts",
-        content: renderPostsPage(POSTS),
+        content: renderPostsPage(posts),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
@@ -38,13 +42,32 @@ export default {
 
     const post = POSTS.find(item => path === `/posts/${item.slug}.html`);
     if (post) {
+      const content = await readPostBody(env, request, post.slug);
+      if (content === null) return new Response("Not Found", { status: 404 });
       return html(renderPage({
         title: post.title,
         active: "posts",
-        content: renderArticlePage(post),
+        content: renderArticlePage({ ...post, content }),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
+    }
+
+    if (path === "/admin") {
+      return html(renderPage({
+        title: "写作后台",
+        active: "",
+        content: renderAdminPage(),
+        site: SITE,
+        styles: ["/admin.css"],
+        scripts: ["/admin.js"],
+        noindex: true
+      }));
+    }
+
+    if (path === "/api/admin" || path.startsWith("/api/admin/")) {
+      if (!isOwner(request, env)) return new Response("Forbidden", { status: 403 });
+      return adminApi(request, env, path);
     }
 
     if (path === "/links") {
@@ -78,6 +101,39 @@ export default {
     return new Response("Not Found", { status: 404 });
   }
 };
+
+// 写作后台接口。只有通过 isOwner 校验的请求才会走到这里。
+async function adminApi(request, env, path) {
+  const method = request.method;
+  const { searchParams } = new URL(request.url);
+
+  if (method === "GET" && path === "/api/admin/posts") return adminJson(await listPosts(env));
+  if (method === "GET" && path === "/api/admin/post") return adminJson(await getPost(env, searchParams.get("slug")));
+  if (method === "GET" && path === "/api/admin/draft") return adminJson(await readDraft(env, searchParams.get("slug")));
+
+  if (method === "POST" && (path === "/api/admin/publish" || path === "/api/admin/delete" || path === "/api/admin/draft")) {
+    const payload = await readJson(request);
+    if (!payload) return adminJson({ status: 400, body: { error: "请求内容不是合法的 JSON" } });
+
+    if (path === "/api/admin/publish") return adminJson(await publishPost(env, payload));
+    if (path === "/api/admin/delete") return adminJson(await deletePost(env, payload.slug));
+    return adminJson(await saveDraft(env, payload));
+  }
+
+  return new Response("Not Found", { status: 404 });
+}
+
+async function readJson(request) {
+  try {
+    return await request.json();
+  } catch (error) {
+    return null;
+  }
+}
+
+function adminJson(result) {
+  return Response.json(result.body, { status: result.status });
+}
 
 function html(content) {
   return new Response(content, { headers: { "Content-Type": "text/html; charset=utf-8" } });

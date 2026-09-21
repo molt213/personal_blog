@@ -13,6 +13,7 @@ export function renderRobotsTxt(origin) {
   return `User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /admin
 
 Sitemap: ${origin}/sitemap.xml
 `;

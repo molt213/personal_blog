@@ -3,8 +3,11 @@
   "name": "personal-blog",
   "main": "worker.js",
   "compatibility_date": "2026-08-25",
+  "workers_dev": false,
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/posts", "/posts/*"]
   },
   "d1_databases": [
     {
@@ -18,5 +21,11 @@
       "binding": "KV",
       "id": "ce473681ded24830bf89a98676ee5ffd"
     }
-  ]
+  ],
+  "vars": {
+    "GITHUB_REPO": "molt213/personal_blog",
+    "GITHUB_BRANCH": "main",
+    "ADMIN_EMAIL": "wurui213@163.com",
+    "ADMIN_HOST": "molt213.top"
+  }
 }
