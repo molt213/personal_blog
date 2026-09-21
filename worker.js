@@ -54,6 +54,7 @@ export default {
     }
 
     if (path === "/admin") {
+      if (!isOwner(request, env)) return forbidden();
       return html(renderPage({
         title: "写作后台",
         active: "",
@@ -66,7 +67,9 @@ export default {
     }
 
     if (path === "/api/admin" || path.startsWith("/api/admin/")) {
-      if (!isOwner(request, env)) return new Response("Forbidden", { status: 403 });
+      if (!isOwner(request, env)) {
+        return Response.json({ error: "没有访问后台的权限" }, { status: 403 });
+      }
       return adminApi(request, env, path);
     }
 
@@ -133,6 +136,18 @@ async function readJson(request) {
 
 function adminJson(result) {
   return Response.json(result.body, { status: result.status });
+}
+
+// 没有通过身份校验时的提示页。线上只有站长本人在 Cloudflare Access 登录后能打开后台。
+function forbidden() {
+  return new Response(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>没有访问权限</title></head>
+<body style="margin:0;padding:48px;background:#f5f6fa;color:#162036;font:16px/1.65 system-ui,'PingFang SC','Microsoft YaHei',sans-serif">
+<h1 style="font-size:22px">403 · 没有访问权限</h1>
+<p style="color:#60708b">写作后台只有站长登录后可以打开。</p>
+</body>
+</html>`, { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
 function html(content) {
