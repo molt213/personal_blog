@@ -1,11 +1,15 @@
-import { commitChanges, githubReady, readRepoFile } from "../services/github.js";
+import { bytesToBase64, commitChanges, githubReady, readRepoFile } from "../services/github.js";
 import { firstImageOf, pickImageUrl } from "../services/post-content.js";
 
 const POSTS_PATH = "content/posts/posts.json";
 const BODY_DIR = "public/posts/";
+const IMAGE_DIR = "public/images/";
 const DRAFT_PREFIX = "draft:";
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,60}$/;
 const DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
+const IMAGE_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES_PER_UPLOAD = 10;
 const LIMITS = { title: 120, category: 20, date: 10, excerpt: 200, lead: 200, artLabel: 80, cover: 500, content: 200000 };
 const LABELS = { title: "标题", category: "分类", date: "日期", excerpt: "摘要", lead: "导语", artLabel: "卡片标签", cover: "封面地址", content: "正文" };
 
@@ -108,6 +112,62 @@ export async function deletePost(env, slug) {
 
   await clearDraft(env, slug);
   return { status: 200, body: { ok: true, slug } };
+}
+
+// 上传图片：一次请求可以带多张，全部写进 public/images/，合并成一次提交。
+// 校验放在最前面，密钥没配好也能先看到"格式不对""图太大"这类具体原因。
+export async function uploadImage(env, request) {
+  let form;
+  try {
+    form = await request.formData();
+  } catch (error) {
+    return { status: 400, body: { error: "上传内容格式不对，请重新选择图片" } };
+  }
+
+  const files = form.getAll("file").filter(item => item && typeof item !== "string");
+  if (!files.length) return { status: 400, body: { error: "没有收到图片文件" } };
+  if (files.length > MAX_IMAGES_PER_UPLOAD) {
+    return { status: 400, body: { error: `一次最多上传 ${MAX_IMAGES_PER_UPLOAD} 张图片` } };
+  }
+
+  const changes = [];
+  for (const file of files) {
+    const ext = IMAGE_TYPES[file.type];
+    if (!ext) return { status: 400, body: { error: `只支持 png / jpg / webp / gif 图片，收到的是 ${file.type || "未知格式"}` } };
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { status: 400, body: { error: `有张图片 ${(file.size / 1024 / 1024).toFixed(1)} MB，超过 5 MB 上限，压一下再传` } };
+    }
+
+    const name = safeImageName(file.name, ext);
+    const path = `${IMAGE_DIR}${name}`;
+    if (!/^public\/images\/[\w\u4e00-\u9fa5.-]+\.(png|jpg|webp|gif)$/.test(path)) {
+      return { status: 400, body: { error: "文件名不合法" } };
+    }
+
+    changes.push({ path, content: bytesToBase64(new Uint8Array(await file.arrayBuffer())), encoding: "base64" });
+  }
+
+  if (!githubReady(env)) return { status: 503, body: { error: "后台还没有配置 GitHub 密钥，图片暂时传不上去" } };
+
+  try {
+    await commitChanges(env, changes, `上传图片：${changes.map(change => change.path.split("/").pop()).join("、")}`);
+  } catch (error) {
+    return { status: error.code === "conflict" ? 409 : 502, body: { error: messageOf(error), code: error.code } };
+  }
+
+  return { status: 200, body: { ok: true, urls: changes.map(change => `/${change.path.replace(/^public\//, "")}`) } };
+}
+
+// 文件名只保留中英文、数字、短横线和点，再补上日期和随机后缀，避免重名和路径穿越
+function safeImageName(original, ext) {
+  const base = String(original || "")
+    .replace(/\.[^.]*$/, "")
+    .replace(/[^\w\u4e00-\u9fa5-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(3)), byte => byte.toString(16).padStart(2, "0")).join("");
+  return `${base || "image"}-${stamp}-${salt}.${ext}`;
 }
 
 export async function readDraft(env, slug) {

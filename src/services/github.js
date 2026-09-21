@@ -17,7 +17,8 @@ export async function readRepoFile(env, path) {
   return decodeBase64(data.content);
 }
 
-// 一次原子提交，changes 里可以是写入 { path, content } 或删除 { path, remove: true }。
+// 一次原子提交，changes 里可以是写入 { path, content }、写入二进制 { path, content, encoding: "base64" }
+// 或删除 { path, remove: true }。
 // 用 Git Data API 而不是逐文件提交，避免出现"正文提交了、文章资料没提交"的半成品。
 export async function commitChanges(env, changes, message) {
   const head = await headCommit(env);
@@ -28,9 +29,10 @@ export async function commitChanges(env, changes, message) {
       tree.push({ path: change.path, mode: "100644", type: "blob", sha: null });
       continue;
     }
+    const content = change.encoding === "base64" ? change.content : encodeBase64(change.content);
     const blob = await api(env, `/repos/${repo(env)}/git/blobs`, {
       method: "POST",
-      body: JSON.stringify({ content: encodeBase64(change.content), encoding: "base64" })
+      body: JSON.stringify({ content, encoding: "base64" })
     });
     if (!blob.ok) throw await apiError(blob);
     tree.push({ path: change.path, mode: "100644", type: "blob", sha: (await blob.json()).sha });
@@ -121,8 +123,13 @@ function encodePath(value) {
   return String(value).split("/").map(encodeURIComponent).join("/");
 }
 
-function encodeBase64(text) {
+export function encodeBase64(text) {
   const bytes = new TextEncoder().encode(text);
+  return bytesToBase64(bytes);
+}
+
+// 图片这类二进制内容用这个
+export function bytesToBase64(bytes) {
   let binary = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {

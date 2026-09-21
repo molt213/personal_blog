@@ -29,8 +29,9 @@ export function renderAdminPage() {
       <label for="f-cover">封面地址 <small>留空就自动取正文里的第一张图</small></label>
       <input id="f-cover" type="text" maxlength="500" placeholder="/images/xxx.png 或 https://…">
       <div class="admin-toolbar" id="admin-toolbar" role="group" aria-label="插入常用片段"></div>
-      <label for="f-content">正文 <small>可以直接粘贴 HTML</small></label>
-      <textarea id="f-content" spellcheck="false" placeholder="<p>在这里写正文…</p>"></textarea>
+      <input id="admin-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+      <label for="f-content">正文 <small id="admin-count">0 字</small></label>
+      <textarea id="f-content" spellcheck="false" placeholder="<p>在这里写正文…</p>　图片可以直接拖进来，或截图后按 Ctrl+V 粘贴"></textarea>
     </div>
     <div class="admin-foot">
       <span id="admin-hint" role="status" aria-live="polite">从左边选一篇文章，或者点“新建文章”。</span>

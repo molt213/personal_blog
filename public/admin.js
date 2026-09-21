@@ -19,6 +19,9 @@
   const warnEl = $("admin-warn");
   const frame = $("admin-preview-frame");
   const noteEl = $("admin-preview-note");
+  const countEl = $("admin-count");
+  const fileEl = $("admin-file");
+  const fieldsEl = document.querySelector(".admin-fields");
   const btnNew = $("admin-new");
   const btnRestore = $("admin-restore");
   const btnDraft = $("admin-draft");
@@ -27,18 +30,23 @@
   const btnPublish = $("admin-publish");
 
   const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,60}$/;
+  const MAX_CONTENT = 200000;
+  const MAX_IMAGES = 10;
+
+  // 工具栏。wrap 表示"选中文字时用它包裹"，template 表示"没选中时插入的模板"。
   const SNIPPETS = [
-    { label: "大标题", text: "<h2>一、标题</h2>\n" },
-    { label: "小标题", text: "<h3>① 小标题</h3>\n" },
-    { label: "段落", text: "<p>正文</p>\n" },
-    { label: "灰字注释", text: '<small class="note">说明</small>\n' },
-    { label: "引用框", text: '<blockquote>\n  引用内容。<br>\n  <small class="note">来源或翻译。</small>\n</blockquote>\n' },
-    { label: "链接", text: '<a class="text-link" href="https://example.com/">链接文字</a>' },
-    { label: "图片", text: '<img src="/images/文件名.png" alt="说明">\n' },
-    { label: "图片带说明", text: '<figure class="article-image">\n  <img src="/images/文件名.png" alt="说明">\n  <figcaption>图片说明。</figcaption>\n</figure>\n' },
-    { label: "视频", text: '<figure class="video-embed">\n  <iframe src="https://www.youtube.com/embed/视频ID" title="视频标题" loading="lazy" allowfullscreen></iframe>\n  <figcaption>视频来源。</figcaption>\n</figure>\n' },
-    { label: "音乐", text: '<figure class="music-embed">\n  <iframe src="https://music.163.com/outchain/player?type=2&id=歌曲ID&auto=0&height=66" title="歌曲名" loading="lazy"></iframe>\n  <figcaption>音乐：歌曲名。来源：网易云音乐。</figcaption>\n</figure>\n' },
-    { label: "剧透块", text: '<button class="spoiler" type="button">隐藏内容</button>' }
+    { label: "上传图片", action: "upload", hint: "选图片上传，也可以直接拖进来或粘贴" },
+    { label: "外链图片", template: '<img src="https://example.com/image.jpg" alt="说明">\n' },
+    { label: "图片带说明", template: '<figure class="article-image">\n  <img src="/images/文件名.png" alt="说明">\n  <figcaption>图片说明。</figcaption>\n</figure>\n' },
+    { label: "大标题", template: "<h2>一、标题</h2>\n", wrap: ["<h2>", "</h2>"] },
+    { label: "小标题", template: "<h3>① 小标题</h3>\n", wrap: ["<h3>", "</h3>"] },
+    { label: "段落", template: "<p>正文</p>\n", wrap: ["<p>", "</p>"] },
+    { label: "灰字注释", template: '<small class="note">说明</small>\n', wrap: ['<small class="note">', "</small>"] },
+    { label: "引用框", template: '<blockquote>\n  引用内容。<br>\n  <small class="note">来源或翻译。</small>\n</blockquote>\n', wrap: ["<blockquote>\n  ", "\n</blockquote>\n"] },
+    { label: "链接", template: '<a class="text-link" href="https://example.com/">链接文字</a>', wrap: ['<a class="text-link" href="https://example.com/">', "</a>"] },
+    { label: "视频", template: '<figure class="video-embed">\n  <iframe src="https://www.youtube.com/embed/视频ID" title="视频标题" loading="lazy" allowfullscreen></iframe>\n  <figcaption>视频来源。</figcaption>\n</figure>\n' },
+    { label: "音乐", template: '<figure class="music-embed">\n  <iframe src="https://music.163.com/outchain/player?type=2&id=歌曲ID&auto=0&height=66" title="歌曲名" loading="lazy"></iframe>\n  <figcaption>音乐：歌曲名。来源：网易云音乐。</figcaption>\n</figure>\n' },
+    { label: "剧透块", template: '<button class="spoiler" type="button">隐藏内容</button>', wrap: ['<button class="spoiler" type="button">', "</button>"] }
   ];
 
   let currentSlug = "";
@@ -46,12 +54,9 @@
   let previewTimer = 0;
 
   buildToolbar();
-  Object.values(form).forEach(field => {
-    field.addEventListener("input", () => {
-      markDirty();
-      if (field === form.content || field === form.title || field === form.lead || field === form.excerpt) schedulePreview();
-    });
-  });
+  bindFields();
+  bindUpload();
+  bindShortcuts();
 
   btnNew.addEventListener("click", newPost);
   btnRestore.addEventListener("click", restoreDraft);
@@ -70,28 +75,151 @@
   }, 45000);
 
   loadList();
+  updateCount();
 
   function buildToolbar() {
     const bar = $("admin-toolbar");
     if (!bar) return;
-    bar.innerHTML = SNIPPETS.map((snippet, index) => `<button type="button" data-index="${index}">${escapeHtml(snippet.label)}</button>`).join("");
+    bar.innerHTML = SNIPPETS.map((snippet, index) =>
+      `<button type="button" data-index="${index}" title="${escapeHtml(snippet.hint || (snippet.wrap ? "选中文字后点击可直接包裹" : "插入到光标处"))}">${escapeHtml(snippet.label)}</button>`
+    ).join("");
     bar.addEventListener("click", event => {
       const button = event.target.closest("button[data-index]");
       if (!button) return;
-      insertSnippet(SNIPPETS[Number(button.dataset.index)].text);
+      const snippet = SNIPPETS[Number(button.dataset.index)];
+      if (snippet.action === "upload") {
+        if (fileEl) fileEl.click();
+        return;
+      }
+      applySnippet(snippet);
     });
   }
 
-  function insertSnippet(text) {
+  function bindFields() {
+    Object.values(form).forEach(field => {
+      field.addEventListener("input", () => {
+        markDirty();
+        schedulePreview();
+        updateCount();
+      });
+    });
+  }
+
+  function bindUpload() {
+    if (fileEl) {
+      fileEl.addEventListener("change", () => {
+        uploadFiles(fileEl.files);
+        fileEl.value = "";
+      });
+    }
+
+    // 粘贴图片直接上传（截图工具复制后 Ctrl+V 就能用）
+    form.content.addEventListener("paste", event => {
+      const files = pastedFiles(event.clipboardData);
+      if (!files.length) return;
+      event.preventDefault();
+      uploadFiles(files);
+    });
+
+    if (!fieldsEl) return;
+    fieldsEl.addEventListener("dragover", event => {
+      if (!hasFiles(event.dataTransfer)) return;
+      event.preventDefault();
+      fieldsEl.classList.add("is-dropping");
+    });
+    fieldsEl.addEventListener("dragleave", event => {
+      if (event.target === fieldsEl) fieldsEl.classList.remove("is-dropping");
+    });
+    fieldsEl.addEventListener("drop", event => {
+      fieldsEl.classList.remove("is-dropping");
+      const files = event.dataTransfer ? event.dataTransfer.files : null;
+      if (!files || !files.length) return;
+      event.preventDefault();
+      uploadFiles(files);
+    });
+
+    // 拖到页面别处时，别让浏览器直接打开图片
+    document.addEventListener("dragover", event => {
+      if (hasFiles(event.dataTransfer)) event.preventDefault();
+    });
+    document.addEventListener("drop", event => {
+      if (event.dataTransfer && event.dataTransfer.files.length) event.preventDefault();
+    });
+  }
+
+  function bindShortcuts() {
+    document.addEventListener("keydown", event => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      const key = String(event.key).toLowerCase();
+      if (key === "s") {
+        event.preventDefault();
+        saveDraft(false);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        publish();
+      }
+    });
+  }
+
+  // 插入文本到光标处：优先用 execCommand，它能保留浏览器的撤销记录
+  function insertAtCaret(text) {
     const area = form.content;
     const start = area.selectionStart === null ? area.value.length : area.selectionStart;
     const end = area.selectionEnd === null ? start : area.selectionEnd;
-    area.value = area.value.slice(0, start) + text + area.value.slice(end);
-    const caret = start + text.length;
+
     area.focus();
-    area.setSelectionRange(caret, caret);
+    area.setSelectionRange(start, end);
+
+    let inserted = false;
+    try {
+      inserted = document.execCommand("insertText", false, text);
+    } catch (error) {
+      inserted = false;
+    }
+    if (!inserted) area.setRangeText(text, start, end, "end");
+
     markDirty();
     schedulePreview();
+    updateCount();
+  }
+
+  function applySnippet(snippet) {
+    const area = form.content;
+    const start = area.selectionStart || 0;
+    const end = area.selectionEnd || 0;
+
+    if (snippet.wrap && end > start) {
+      insertAtCaret(snippet.wrap[0] + area.value.slice(start, end) + snippet.wrap[1]);
+      return;
+    }
+    insertAtCaret(snippet.template);
+  }
+
+  async function uploadFiles(fileList) {
+    const picked = Array.from(fileList || []).filter(Boolean);
+    const images = picked.filter(file => file.type && file.type.startsWith("image/"));
+    if (!images.length) {
+      if (picked.length) setHint("只能上传 png / jpg / webp / gif 图片。", "error");
+      return;
+    }
+    if (images.length > MAX_IMAGES) {
+      setHint(`一次最多上传 ${MAX_IMAGES} 张图片。`, "error");
+      return;
+    }
+
+    setHint(`正在上传 ${images.length} 张图片…`);
+    const body = new FormData();
+    images.forEach(file => body.append("file", file));
+
+    try {
+      const data = await api("/api/admin/upload", body);
+      insertAtCaret(data.urls.map(url => `<img src="${url}" alt="">`).join("\n") + "\n");
+      setHint(`已上传 ${data.urls.length} 张图片并插入正文；点“发布”之后线上才能看到。`, "success");
+    } catch (error) {
+      setHint(error.message, "error");
+    }
   }
 
   async function loadList() {
@@ -99,7 +227,7 @@
       const data = await api("/api/admin/posts");
       if (!data.configured) {
         warnEl.hidden = false;
-        warnEl.textContent = "后台还没有配置 GitHub 密钥（GITHUB_TOKEN），现在只能看和写草稿，发布还不通。按《后台使用说明》里的步骤配好就能用。";
+        warnEl.textContent = "后台还没有配置 GitHub 密钥（GITHUB_TOKEN），现在只能看和写草稿，发布和传图还不通。按《后台使用说明》里的步骤配好就能用。";
       }
       renderList(data.posts || []);
     } catch (error) {
@@ -140,6 +268,7 @@
       markClean();
       markActive();
       renderPreview();
+      updateCount();
       setHint(`正在编辑：${data.post.title}`);
       await checkDraft(slug);
     } catch (error) {
@@ -158,7 +287,8 @@
     markClean();
     markActive();
     renderPreview();
-    setHint("新文章：先填标题，再写正文，最后点“发布”。");
+    updateCount();
+    setHint("新文章：先填标题，再写正文，最后点“发布”。图片可以直接拖进来或粘贴。");
     form.title.focus();
   }
 
@@ -189,6 +319,7 @@
       fill(data.draft);
       markDirty();
       renderPreview();
+      updateCount();
       setHint("草稿已恢复，检查一下再点“发布”。", "success");
     } catch (error) {
       setHint(error.message, "error");
@@ -202,7 +333,7 @@
       return;
     }
     try {
-      const data = await api("/api/admin/draft", payload);
+      await api("/api/admin/draft", payload);
       setHint(silent ? `已自动存草稿（${clock()}）` : `草稿已保存（${clock()}），只有你能看到。`, "success");
       if (!silent && !currentSlug) btnRestore.hidden = false;
     } catch (error) {
@@ -245,6 +376,7 @@
       btnRestore.hidden = true;
       markClean();
       renderPreview();
+      updateCount();
       await loadList();
       setHint("已从 GitHub 删除，大约一分钟后线上更新。", "success");
     });
@@ -276,6 +408,13 @@
     const date = form.date.value.trim();
     frame.srcdoc = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/style.css"></head><body style="background:#fff"><main style="padding:20px"><article class="article"><p class="eyebrow"><i></i>${escapeHtml(category)} · ${escapeHtml(date)}</p><h1>${escapeHtml(title).replace("：", "：<br>")}</h1>${lead ? `<p class="article-lead">${escapeHtml(lead)}</p>` : ""}<em></em>${form.content.value}</article></main></body></html>`;
     if (noteEl) noteEl.textContent = `预览已更新 ${clock()}`;
+  }
+
+  function updateCount() {
+    if (!countEl) return;
+    const length = form.content.value.length;
+    countEl.textContent = `${length} 字`;
+    countEl.classList.toggle("over", length > MAX_CONTENT * 0.75);
   }
 
   function collect() {
@@ -317,10 +456,29 @@
     hintEl.className = kind || "";
   }
 
+  function hasFiles(dataTransfer) {
+    if (!dataTransfer) return false;
+    const types = Array.from(dataTransfer.types || []);
+    return types.includes("Files");
+  }
+
+  function pastedFiles(clipboardData) {
+    if (!clipboardData) return [];
+    const files = Array.from(clipboardData.files || []);
+    if (files.length) return files;
+    return Array.from(clipboardData.items || [])
+      .filter(item => item.kind === "file")
+      .map(item => item.getAsFile())
+      .filter(Boolean);
+  }
+
   async function api(path, body) {
-    const options = body === undefined
-      ? {}
-      : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+    let options = {};
+    if (body instanceof FormData) {
+      options = { method: "POST", body };
+    } else if (body !== undefined) {
+      options = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+    }
 
     const response = await fetch(path, options);
     let data = null;

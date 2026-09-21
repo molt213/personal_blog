@@ -14,7 +14,7 @@ import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
 import { recordVisit } from "./src/api/views.js";
 import { readPostBody, withCovers } from "./src/services/post-content.js";
-import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft } from "./src/api/admin.js";
+import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft, uploadImage } from "./src/api/admin.js";
 
 const PAGES = {
   "/": { title: "首页", active: "home", content: homeContent },
@@ -113,6 +113,8 @@ async function adminApi(request, env, path) {
   if (method === "GET" && path === "/api/admin/posts") return adminJson(await listPosts(env));
   if (method === "GET" && path === "/api/admin/post") return adminJson(await getPost(env, searchParams.get("slug")));
   if (method === "GET" && path === "/api/admin/draft") return adminJson(await readDraft(env, searchParams.get("slug")));
+
+  if (method === "POST" && path === "/api/admin/upload") return adminJson(await uploadImage(env, request));
 
   if (method === "POST" && (path === "/api/admin/publish" || path === "/api/admin/delete" || path === "/api/admin/draft")) {
     const payload = await readJson(request);

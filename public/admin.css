@@ -1,5 +1,10 @@
 /* 写作后台的样式，只有 /admin 页面会加载这个文件。 */
 
+/* style.css 里给 input 写了 display:block，会盖掉 hidden 属性的默认样式，这里补回来 */
+[hidden] {
+  display: none !important;
+}
+
 .admin-heading {
   padding-bottom: 38px;
 }
@@ -118,6 +123,24 @@
 .admin-fields input,
 .admin-fields textarea {
   border-color: var(--line);
+}
+
+/* 拖着图片进来时整块高亮 */
+.admin-fields.is-dropping {
+  outline: 2px dashed var(--blue);
+  outline-offset: -6px;
+  background: var(--blue-wash);
+}
+
+#admin-count {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+#admin-count.over {
+  color: #c0392b;
+  font-weight: 850;
 }
 
 .admin-fields textarea {
