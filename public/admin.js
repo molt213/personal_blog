@@ -52,6 +52,7 @@
   let currentSlug = "";
   let dirty = false;
   let previewTimer = 0;
+  let pendingCaret = null;
 
   buildToolbar();
   bindFields();
@@ -163,12 +164,8 @@
     });
   }
 
-  // 插入文本到光标处：优先用 execCommand，它能保留浏览器的撤销记录
-  function insertAtCaret(text) {
-    const area = form.content;
-    const start = area.selectionStart === null ? area.value.length : area.selectionStart;
-    const end = area.selectionEnd === null ? start : area.selectionEnd;
-
+  // 插入文本：优先用 execCommand，它能保留浏览器的撤销记录
+  function writeAt(area, text, start, end) {
     area.focus();
     area.setSelectionRange(start, end);
 
@@ -185,6 +182,31 @@
     updateCount();
   }
 
+  // 主动点按钮插入：按当前选中的范围插入（选中文字时就是包裹/替换）
+  function insertAtCaret(text) {
+    const area = form.content;
+    const start = area.selectionStart === null ? area.value.length : area.selectionStart;
+    const end = area.selectionEnd === null ? start : area.selectionEnd;
+    writeAt(area, text, start, end);
+  }
+
+  // 记下用户触发上传那一刻的光标位置。上传要花几秒，期间选区可能变（比如用户按了 Ctrl+A），
+  // 所以自动插入必须用这里记下的位置，并且只插入、不替换任何内容。
+  function rememberCaret() {
+    const area = form.content;
+    pendingCaret = {
+      start: area.selectionStart === null ? area.value.length : area.selectionStart,
+      end: area.selectionEnd === null ? 0 : area.selectionEnd
+    };
+  }
+
+  function insertUploaded(text) {
+    const area = form.content;
+    const start = pendingCaret ? pendingCaret.start : (area.selectionStart === null ? area.value.length : area.selectionStart);
+    pendingCaret = null;
+    writeAt(area, text, start, start);
+  }
+
   function applySnippet(snippet) {
     const area = form.content;
     const start = area.selectionStart || 0;
@@ -199,6 +221,11 @@
 
   async function uploadFiles(fileList) {
     const picked = Array.from(fileList || []).filter(Boolean);
+
+    // 上传要花几秒，先把光标位置记下来，并把当前内容存一份草稿当保险
+    rememberCaret();
+    if (dirty) saveDraft(true, true);
+
     const images = picked.filter(file => file.type && file.type.startsWith("image/"));
     if (!images.length) {
       if (picked.length) setHint("只能上传 png / jpg / webp / gif 图片。", "error");
@@ -215,7 +242,7 @@
 
     try {
       const data = await api("/api/admin/upload", body);
-      insertAtCaret(data.urls.map(url => `<img src="${url}" alt="">`).join("\n") + "\n");
+      insertUploaded(data.urls.map(url => `<img src="${url}" alt="">`).join("\n") + "\n");
       setHint(`已上传 ${data.urls.length} 张图片并插入正文；点“发布”之后线上才能看到。`, "success");
     } catch (error) {
       setHint(error.message, "error");
@@ -326,7 +353,7 @@
     }
   }
 
-  async function saveDraft(silent) {
+  async function saveDraft(silent, quiet) {
     const payload = collect();
     if (!SLUG_PATTERN.test(payload.slug)) {
       if (!silent) setHint("先把“网址代号”填好（小写英文、数字、短横线），才能存草稿。", "error");
@@ -334,10 +361,10 @@
     }
     try {
       await api("/api/admin/draft", payload);
-      setHint(silent ? `已自动存草稿（${clock()}）` : `草稿已保存（${clock()}），只有你能看到。`, "success");
+      if (!quiet) setHint(silent ? `已自动存草稿（${clock()}）` : `草稿已保存（${clock()}），只有你能看到。`, "success");
       if (!silent && !currentSlug) btnRestore.hidden = false;
     } catch (error) {
-      setHint(error.message, "error");
+      if (!quiet) setHint(error.message, "error");
     }
   }
 
