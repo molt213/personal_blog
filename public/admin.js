@@ -250,7 +250,9 @@
     try {
       const data = await api("/api/admin/upload", body);
       insertUploaded(data.urls.map(url => `<img src="${url}" alt="">`).join("\n") + "\n");
-      setHint(`已上传 ${data.urls.length} 张图片并插入正文；点“发布”之后线上才能看到。`, "success");
+      setHint(`已上传 ${data.urls.length} 张图片并插入正文。图片要等约 1 分钟构建完成才会显示，我等会儿自动刷新一次预览。`, "success");
+      // 构建完成后自动重画一次预览，让刚上传的图片自己出现
+      window.setTimeout(renderPreview, 80000);
     } catch (error) {
       setHint(error.message, "error");
     }
