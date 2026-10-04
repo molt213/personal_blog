@@ -37,11 +37,14 @@
   const MAX_CONTENT = 200000;
   const MAX_IMAGES = 10;
 
+  // 图片统一用带说明的图注模板：上传、拖放、粘贴、外链都插入同一套 <figure class="article-image"> 结构，
+  // 图片下方的说明文字对应 style.css 里的 .article .article-image figcaption
+  const imageFigure = src => `<figure class="article-image">\n  <img src="${src}" alt="说明">\n  <figcaption>图片说明。</figcaption>\n</figure>\n`;
+
   // 工具栏。wrap 表示"选中文字时用它包裹"，template 表示"没选中时插入的模板"。
   const SNIPPETS = [
     { label: "上传图片", action: "upload", hint: "选图片上传，也可以直接拖进来或粘贴" },
-    { label: "外链图片", template: '<img src="https://example.com/image.jpg" alt="说明">\n' },
-    { label: "图片带说明", template: '<figure class="article-image">\n  <img src="/images/文件名.png" alt="说明">\n  <figcaption>图片说明。</figcaption>\n</figure>\n' },
+    { label: "外链图片", template: imageFigure("https://example.com/image.jpg") },
     { label: "大标题", template: "<h2>一、标题</h2>\n", wrap: ["<h2>", "</h2>"] },
     { label: "小标题", template: "<h3>① 小标题</h3>\n", wrap: ["<h3>", "</h3>"] },
     { label: "段落", template: "<p>正文</p>\n", wrap: ["<p>", "</p>"] },
@@ -249,7 +252,7 @@
 
     try {
       const data = await api("/api/admin/upload", body);
-      insertUploaded(data.urls.map(url => `<img src="${url}" alt="">`).join("\n") + "\n");
+      insertUploaded(data.urls.map(imageFigure).join("\n"));
       setHint(`已上传 ${data.urls.length} 张图片并插入正文。图片要等约 1 分钟构建完成才会显示，我等会儿自动刷新一次预览。`, "success");
       // 构建完成后自动重画一次预览，让刚上传的图片自己出现
       window.setTimeout(renderPreview, 80000);
