@@ -22,6 +22,10 @@
   const countEl = $("admin-count");
   const fileEl = $("admin-file");
   const fieldsEl = document.querySelector(".admin-fields");
+  const draftWrap = $("admin-drafts");
+  const draftListEl = $("admin-draft-list");
+  const draftCountEl = $("admin-draft-count");
+  const postCountEl = $("admin-post-count");
   const btnNew = $("admin-new");
   const btnRestore = $("admin-restore");
   const btnDraft = $("admin-draft");
@@ -29,7 +33,7 @@
   const btnDelete = $("admin-delete");
   const btnPublish = $("admin-publish");
 
-  const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,60}$/;
+  const SLUG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/;
   const MAX_CONTENT = 200000;
   const MAX_IMAGES = 10;
 
@@ -53,6 +57,9 @@
   let dirty = false;
   let previewTimer = 0;
   let pendingCaret = null;
+  let publishedSlugs = [];
+  let draftsCache = [];
+  let activeDraftSlug = "";
 
   buildToolbar();
   bindFields();
@@ -256,9 +263,81 @@
         warnEl.hidden = false;
         warnEl.textContent = "后台还没有配置 GitHub 密钥（GITHUB_TOKEN），现在只能看和写草稿，发布和传图还不通。按《后台使用说明》里的步骤配好就能用。";
       }
-      renderList(data.posts || []);
+      const posts = data.posts || [];
+      publishedSlugs = posts.map(post => post.slug);
+      if (postCountEl) postCountEl.textContent = publishedSlugs.length ? `(${publishedSlugs.length})` : "";
+      renderList(posts);
     } catch (error) {
       listEl.innerHTML = `<p class="loading">${escapeHtml(error.message)}</p>`;
+    }
+    await loadDrafts();
+  }
+
+  // 左侧草稿栏：草稿存在云端（KV），刷新页面也不会丢，点一下就能接着写
+  async function loadDrafts() {
+    if (!draftWrap || !draftListEl) return;
+    try {
+      const data = await api("/api/admin/drafts");
+      draftsCache = data.drafts || [];
+      draftWrap.hidden = draftsCache.length === 0;
+      if (draftCountEl) draftCountEl.textContent = draftsCache.length ? `(${draftsCache.length})` : "";
+      draftListEl.innerHTML = draftsCache.map(draft => `
+        <div class="admin-item admin-draft${draft.slug === activeDraftSlug ? " active" : ""}" data-slug="${escapeHtml(draft.slug)}">
+          <button class="admin-open" type="button" data-open="${escapeHtml(draft.slug)}">
+            <b>${escapeHtml(draft.title || "（还没写标题）")}</b>
+            <span>${escapeHtml(timeLabel(draft.savedAt))}　·　${draft.length} 字</span>
+          </button>
+          <button class="admin-drop" type="button" data-drop="${escapeHtml(draft.slug)}" title="删除这份草稿" aria-label="删除草稿">✕</button>
+        </div>`).join("");
+      draftListEl.querySelectorAll("[data-open]").forEach(button => {
+        button.addEventListener("click", () => openDraft(button.dataset.open));
+      });
+      draftListEl.querySelectorAll("[data-drop]").forEach(button => {
+        button.addEventListener("click", () => dropDraft(button.dataset.drop));
+      });
+    } catch (error) {
+      draftWrap.hidden = true;
+    }
+  }
+
+  async function openDraft(slug) {
+    if (!confirmDiscard()) return;
+    try {
+      const data = await api(`/api/admin/draft?slug=${encodeURIComponent(slug)}`);
+      if (!data.draft) {
+        setHint("这份草稿已经不在了。", "error");
+        await loadDrafts();
+        return;
+      }
+
+      const published = publishedSlugs.includes(slug);
+      currentSlug = published ? slug : "";
+      activeDraftSlug = slug;
+      fill({ ...data.draft, slug });
+      form.slug.disabled = published;
+      btnDelete.hidden = !published;
+      btnRestore.hidden = true;
+      markClean();
+      markActive();
+      renderPreview();
+      updateCount();
+      setHint(published
+        ? "正在编辑已发布文章的草稿，点“发布”会覆盖线上那一篇。"
+        : "正在编辑草稿（还没发布），点“发布”才会提交到 GitHub。");
+    } catch (error) {
+      setHint(error.message, "error");
+    }
+  }
+
+  async function dropDraft(slug) {
+    if (!window.confirm("删掉这份草稿？删了就找不回来了。")) return;
+    try {
+      await api("/api/admin/delete-draft", { slug });
+      if (activeDraftSlug === slug) activeDraftSlug = "";
+      setHint("草稿已删除。", "success");
+      await loadDrafts();
+    } catch (error) {
+      setHint(error.message, "error");
     }
   }
 
@@ -281,6 +360,11 @@
     listEl.querySelectorAll(".admin-item").forEach(item => {
       item.classList.toggle("active", item.dataset.slug === currentSlug);
     });
+    if (draftListEl) {
+      draftListEl.querySelectorAll(".admin-item").forEach(item => {
+        item.classList.toggle("active", Boolean(activeDraftSlug) && item.dataset.slug === activeDraftSlug);
+      });
+    }
   }
 
   async function openPost(slug) {
@@ -289,6 +373,7 @@
     try {
       const data = await api(`/api/admin/post?slug=${encodeURIComponent(slug)}`);
       currentSlug = data.post.slug;
+      activeDraftSlug = "";
       fill(data.post);
       form.slug.disabled = true;
       btnDelete.hidden = false;
@@ -306,8 +391,10 @@
   function newPost() {
     if (!confirmDiscard()) return;
     const today = dateToday();
+    const slug = `post-${today.replace(/\./g, "")}`;
     currentSlug = "";
-    fill({ slug: `post-${today.replace(/\./g, "")}`, title: "", category: "随记", date: today, excerpt: "", lead: "", artLabel: "", cover: "", content: "" });
+    activeDraftSlug = "";
+    fill({ slug, title: "", category: "随记", date: today, excerpt: "", lead: "", artLabel: "", cover: "", content: "" });
     form.slug.disabled = false;
     btnDelete.hidden = true;
     btnRestore.hidden = true;
@@ -315,7 +402,12 @@
     markActive();
     renderPreview();
     updateCount();
-    setHint("新文章：先填标题，再写正文，最后点“发布”。图片可以直接拖进来或粘贴。");
+
+    if (draftsCache.some(draft => draft.slug === slug)) {
+      setHint(`提示：${slug} 这份草稿还在，左边“草稿”里点它就能接着写。`);
+    } else {
+      setHint("新文章：先填标题，再写正文，最后点“发布”。图片可以直接拖进来或粘贴。");
+    }
     form.title.focus();
   }
 
@@ -356,13 +448,17 @@
   async function saveDraft(silent, quiet) {
     const payload = collect();
     if (!SLUG_PATTERN.test(payload.slug)) {
-      if (!silent) setHint("先把“网址代号”填好（小写英文、数字、短横线），才能存草稿。", "error");
+      if (!silent) setHint("先把“网址代号”填好（英文、数字、下划线或短横线），才能存草稿。", "error");
       return;
     }
     try {
       await api("/api/admin/draft", payload);
-      if (!quiet) setHint(silent ? `已自动存草稿（${clock()}）` : `草稿已保存（${clock()}），只有你能看到。`, "success");
-      if (!silent && !currentSlug) btnRestore.hidden = false;
+      if (!quiet) {
+        setHint(silent ? `已自动存草稿（${clock()}）` : `草稿已保存（${clock()}），只有你能看到。`, "success");
+        if (!currentSlug) btnRestore.hidden = false;
+        activeDraftSlug = payload.slug;
+        await loadDrafts();
+      }
     } catch (error) {
       if (!quiet) setHint(error.message, "error");
     }
@@ -370,7 +466,7 @@
 
   async function publish() {
     const payload = collect();
-    if (!SLUG_PATTERN.test(payload.slug)) return setHint("网址代号只能用英文小写、数字和短横线，例如 kanc-2026-09。", "error");
+    if (!SLUG_PATTERN.test(payload.slug)) return setHint("网址代号只能用英文、数字、下划线和短横线，例如 kanc-2026-09。", "error");
     if (!payload.title) return setHint("标题还没填。", "error");
     if (!payload.content.trim()) return setHint("正文还没写。", "error");
     if (!window.confirm(`发布《${payload.title}》？\n提交到 GitHub 后大约一分钟线上生效。`)) return;
@@ -378,6 +474,7 @@
     await run(btnPublish, "发布中…", async () => {
       const data = await api("/api/admin/publish", payload);
       currentSlug = data.slug;
+      activeDraftSlug = "";
       form.slug.disabled = true;
       btnDelete.hidden = false;
       btnRestore.hidden = true;
@@ -397,6 +494,7 @@
     await run(btnDelete, "删除中…", async () => {
       await api("/api/admin/delete", { slug: currentSlug });
       currentSlug = "";
+      activeDraftSlug = "";
       fill({ slug: "", title: "", category: "随记", date: dateToday(), excerpt: "", lead: "", artLabel: "", cover: "", content: "" });
       form.slug.disabled = false;
       btnDelete.hidden = true;

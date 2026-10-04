@@ -46,6 +46,31 @@
   overflow-y: auto;
 }
 
+/* 左侧分组标题（草稿 / 已发布） */
+.admin-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.admin-group span {
+  font-weight: 650;
+}
+
+/* 草稿列表容器（条目样式见下面 .admin-item.admin-draft，必须写在 .admin-item 之后） */
+.admin-draft-list {
+  display: grid;
+  gap: 7px;
+  max-height: 34vh;
+  padding-right: 2px;
+  overflow-y: auto;
+}
+
 .admin-item {
   display: grid;
   gap: 4px;
@@ -64,6 +89,45 @@
 .admin-item.active {
   border-color: var(--blue);
   background: var(--blue-wash);
+}
+
+/* 草稿条目：左边点开、右边删除。选择器带 .admin-item 是为了盖过它的 display:grid */
+.admin-item.admin-draft {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 5px;
+}
+
+/* 里面的删除按钮很小，鼠标悬停时整行不要位移 */
+.admin-item.admin-draft:hover {
+  transform: none;
+}
+
+.admin-item.admin-draft .admin-open {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+}
+
+.admin-item.admin-draft .admin-drop {
+  flex: 0 0 26px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--faint);
+  background: transparent;
+  font-size: 12px;
+}
+
+.admin-item.admin-draft .admin-drop:hover {
+  color: #c0392b;
+  background: #ffe9ea;
 }
 
 .admin-item b {

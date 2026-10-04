@@ -8,6 +8,11 @@ export function renderAdminPage() {
 <section class="admin-layout">
   <aside class="admin-side">
     <button class="admin-new" id="admin-new" type="button">＋ 新建文章</button>
+    <div id="admin-drafts" hidden>
+      <p class="admin-group">草稿 <span id="admin-draft-count"></span></p>
+      <div class="admin-draft-list" id="admin-draft-list"></div>
+    </div>
+    <p class="admin-group">已发布 <span id="admin-post-count"></span></p>
     <div class="admin-list" id="admin-list"><p class="loading">正在读取文章…</p></div>
   </aside>
   <div class="admin-main">

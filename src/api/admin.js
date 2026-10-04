@@ -5,7 +5,9 @@ const POSTS_PATH = "content/posts/posts.json";
 const BODY_DIR = "public/posts/";
 const IMAGE_DIR = "public/images/";
 const DRAFT_PREFIX = "draft:";
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,60}$/;
+// 文章代号：允许英文大小写、数字、下划线和短横线。
+// 老文章里有 Mewtype、kanc_26_9 这种写法，规则太严会把它们过滤掉、也改不了。
+const SLUG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/;
 const DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const IMAGE_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -170,6 +172,44 @@ function safeImageName(original, ext) {
   return `${base || "image"}-${stamp}-${salt}.${ext}`;
 }
 
+// 草稿列表：草稿存在 KV 里（不进仓库），这里把所有草稿按最近保存时间排好
+export async function listDrafts(env) {
+  if (!env.KV) return { status: 200, body: { ok: true, drafts: [] } };
+
+  const drafts = [];
+  let cursor = undefined;
+  do {
+    const page = await env.KV.list({ prefix: DRAFT_PREFIX, cursor });
+    for (const key of page.keys) {
+      const value = await env.KV.get(key.name);
+      if (!value) continue;
+      try {
+        const draft = JSON.parse(value);
+        drafts.push({
+          slug: key.name.slice(DRAFT_PREFIX.length),
+          title: String(draft.title || ""),
+          savedAt: String(draft.savedAt || ""),
+          length: String(draft.content || "").length
+        });
+      } catch (error) {
+        // 坏掉的草稿跳过
+      }
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+
+  drafts.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+  return { status: 200, body: { ok: true, drafts } };
+}
+
+export async function removeDraft(env, slug) {
+  if (!env.KV) return { status: 503, body: { error: "没有绑定 KV，草稿功能不可用" } };
+  if (!SLUG_PATTERN.test(String(slug || ""))) return { status: 400, body: { error: "文章代号不正确" } };
+
+  await env.KV.delete(DRAFT_PREFIX + slug);
+  return { status: 200, body: { ok: true, slug } };
+}
+
 export async function readDraft(env, slug) {
   if (!env.KV) return { status: 503, body: { error: "没有绑定 KV，草稿功能不可用" } };
   if (!SLUG_PATTERN.test(String(slug || ""))) return { status: 400, body: { error: "文章代号不正确" } };
@@ -231,7 +271,7 @@ async function readPosts(env) {
 function normalizePost(payload) {
   const raw = payload && typeof payload === "object" ? payload : {};
   const slug = String(raw.slug || "").trim();
-  if (!SLUG_PATTERN.test(slug)) return { error: "网址代号只能用英文小写、数字和短横线，例如 kanc-2026-09" };
+  if (!SLUG_PATTERN.test(slug)) return { error: "网址代号只能用英文、数字、下划线和短横线，例如 kanc-2026-09" };
 
   const fields = {};
   for (const [key, limit] of Object.entries(LIMITS)) {
