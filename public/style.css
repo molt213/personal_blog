@@ -675,6 +675,14 @@ textarea {
   background: var(--blue-wash);
   font-size: 18px;
 }
+.article hr {
+  height: 8px;
+  margin: 46px 0;
+  border: 0;
+  background:
+    radial-gradient(circle, var(--yellow) 0 3.5px, transparent 4.1px) center / 8px 8px no-repeat,
+    linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent) center / 100% 1px no-repeat;
+}
 .primary {
   display: inline-block;
   margin-top: 18px;
