@@ -54,7 +54,7 @@
     { label: "链接", template: '<a class="text-link" href="https://example.com/">链接文字</a>', wrap: ['<a class="text-link" href="https://example.com/">', "</a>"] },
     { label: "视频", template: '<figure class="video-embed">\n  <iframe src="https://www.youtube.com/embed/视频ID" title="视频标题" loading="lazy" allowfullscreen></iframe>\n  <figcaption>视频来源。</figcaption>\n</figure>\n' },
     { label: "音乐", template: '<figure class="music-embed">\n  <iframe src="https://music.163.com/outchain/player?type=2&id=歌曲ID&auto=0&height=66" title="歌曲名" loading="lazy"></iframe>\n  <figcaption>音乐：歌曲名。来源：网易云音乐。</figcaption>\n</figure>\n' },
-    { label: "剧透块", template: '<button class="spoiler" type="button">隐藏内容</button>', wrap: ['<button class="spoiler" type="button">', "</button>"] }
+    { label: "剧透块", template: '<span class="spoiler" tabindex="0">隐藏内容</span>', wrap: ['<span class="spoiler" tabindex="0">', "</span>"] }
   ];
 
   let currentSlug = "";
