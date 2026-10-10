@@ -12,7 +12,7 @@ import { renderLinksPage } from "./src/site/links-page.js";
 import { renderAdminPage } from "./src/site/admin-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
-import { recordVisit } from "./src/api/views.js";
+import { recordVisit, recordPostView, readPostViews, readPostViewsMap } from "./src/api/views.js";
 import { readPostBody, withCovers } from "./src/services/post-content.js";
 import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft, uploadImage, listDrafts, removeDraft } from "./src/api/admin.js";
 
@@ -31,10 +31,11 @@ export default {
 
     if (path === "/posts") {
       const posts = await withCovers(env, request, POSTS);
+      const views = await readPostViewsMap(env, posts.map(item => item.slug));
       return html(renderPage({
         title: "随记",
         active: "posts",
-        content: renderPostsPage(posts),
+        content: renderPostsPage(posts, views),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
@@ -44,10 +45,11 @@ export default {
     if (post) {
       const content = await readPostBody(env, request, post.slug);
       if (content === null) return new Response("Not Found", { status: 404 });
+      const views = await readPostViews(env, post.slug);
       return html(renderPage({
         title: post.title,
         active: "posts",
-        content: renderArticlePage({ ...post, content }),
+        content: renderArticlePage({ ...post, content, views }),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
@@ -100,6 +102,31 @@ export default {
         return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, POST" } });
       }
       return Response.json(await recordVisit(env, SITE.launchDate, request.method === "POST"));
+    }
+
+    // 单篇文章的阅读量。只认已发布的代号，避免被人拿任意字符串往 KV 里塞键。
+    if (path === "/api/post-views") {
+      if (request.method !== "GET" && request.method !== "POST") {
+        return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, POST" } });
+      }
+
+      let slug = "";
+      if (request.method === "GET") {
+        slug = new URL(request.url).searchParams.get("slug") || "";
+      } else {
+        let payload = null;
+        try {
+          payload = await request.json();
+        } catch (error) {
+          payload = null;
+        }
+        slug = payload && typeof payload === "object" ? String(payload.slug || "") : "";
+      }
+
+      if (!POSTS.some(item => item.slug === slug)) {
+        return Response.json({ ok: false, error: "unknown-slug" }, { status: 400 });
+      }
+      return Response.json(await recordPostView(env, slug, request.method === "POST"));
     }
     return new Response("Not Found", { status: 404 });
   }
