@@ -289,6 +289,9 @@
   letter-spacing: -0.06em;
   text-align: center;
 }
+.feature-cover.has-cover .feature-fallback {
+  display: none;
+}
 .feature-copy {
   display: flex;
   padding: 22px 25px 24px;

@@ -28,7 +28,8 @@ function renderLatest(feature, side) {
   const cover = String(feature.cover || "");
   const coverHtml = cover
     ? `<img src="${escapeHtml(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.parentElement.classList.remove('has-cover');this.remove()">`
-    : `<span class="feature-fallback">${escapeHtml(feature.artLabel || feature.title)}</span>`;
+    : "";
+  const fallbackHtml = `<span class="feature-fallback">${escapeHtml(feature.artLabel || feature.title)}</span>`;
 
   const sideHtml = side.map((post, index) => {
     const tone = index === 0 ? "side-yellow" : "side-white";
@@ -44,7 +45,7 @@ function renderLatest(feature, side) {
   return `
           <article class="feature-post">
             <a class="feature-cover${cover ? " has-cover" : ""}" href="${url}" aria-label="阅读：${escapeHtml(feature.title)}">
-              ${coverHtml}
+              ${coverHtml}${fallbackHtml}
               <span class="feature-tag">最新一篇</span>
             </a>
             <div class="feature-copy">
