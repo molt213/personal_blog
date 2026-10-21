@@ -29,7 +29,14 @@ public/         网站的外观、浏览器交互和文章正文
 | 手动改文章资料（标题、日期、摘要） | `content/posts/posts.json` |
 | 手动改文章正文 | `public/posts/<网址代号>.html` |
 | 加友情链接 | `content/links.js` |
-| 改颜色、字号、页面间距 | `public/style.css` |
+| 改基础颜色、字号 | `public/style.css` |
+| 改版心、首页/随记/文章新版式、深色模式 | `public/enhance.css` |
+
+## 界面上的几个小功能
+
+- 侧栏「搜索小站」或 `Ctrl+K`：打开命令面板，可以直接搜文章和页面。
+- 侧栏底部（手机在右上角）：切换深色模式，选择会记住。
+- 文章里的图片：点一下放大，左右方向键翻图，`Esc` 关闭。
 
 更具体的写文章说明放在 [`content/README.md`](content/README.md) 和 [`content/文章写作速查表.md`](content/文章写作速查表.md)。
 
@@ -44,12 +51,14 @@ content/
   posts/posts.json        每篇文章的标题、日期、摘要等资料
 public/
   posts/                  每篇文章的正文（静态文件，运行时读取）
-  style.css               所有视觉样式
+  style.css               基础视觉样式
+  enhance.css             版心、首页/随记/文章新版式、深色模式
+  showcase.js             命令面板、图片灯箱、主题切换
   admin.css / admin.js    写作后台的样式和浏览器交互
-  site.js                 浏览量显示
+  site.js                 浏览量、随记筛选、阅读进度
   guestbook.js            留言板的浏览器交互
 src/
-  site/                   通用布局、文章列表和文章页模板、后台页面
+  site/                   通用布局、首页/列表/文章模板、后台页面
   api/                    留言、浏览量、写作后台接口
   services/               GitHub 读写、正文读取、邮件通知等后台服务
 wrangler.jsonc            Cloudflare 的 Worker、D1、KV 与静态资源配置

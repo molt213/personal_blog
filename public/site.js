@@ -12,6 +12,14 @@ fetch("/api/views", { method: isNewVisit ? "POST" : "GET" })
     if (isNewVisit) writeNumber(LAST_COUNTED_VISIT_KEY, now);
     const stats = document.getElementById("stats");
     if (stats) stats.textContent = `已相遇 ${data.views} 次 · 开站第 ${data.days} 天`;
+    const statViews = document.getElementById("stat-views");
+    const statDays = document.getElementById("stat-days");
+    const heroViews = document.getElementById("hero-views");
+    const heroDays = document.getElementById("hero-days");
+    if (statViews) statViews.textContent = data.views;
+    if (statDays) statDays.textContent = data.days;
+    if (heroViews) heroViews.textContent = data.views;
+    if (heroDays) heroDays.textContent = data.days;
   })
   .catch(() => {});
 
@@ -34,8 +42,65 @@ if (postViewsEl) {
       if (!data.ok) return;
       if (countThisView) writeNumber(countedKey, now);
       postViewsEl.textContent = `${data.views} 次阅读`;
+      const railViews = document.getElementById("rail-views");
+      if (railViews) railViews.textContent = `${data.views} 次`;
     })
     .catch(() => {});
+}
+
+// 随记列表的分类筛选
+const postFilters = document.getElementById("post-filters");
+if (postFilters) {
+  postFilters.addEventListener("click", event => {
+    const button = event.target.closest("[data-filter]");
+    if (!button) return;
+    const value = button.dataset.filter;
+    postFilters.querySelectorAll(".chip").forEach(chip => {
+      chip.classList.toggle("active", chip === button);
+    });
+    document.querySelectorAll("#post-list .post-card").forEach(card => {
+      card.hidden = value !== "all" && card.dataset.category !== value;
+    });
+  });
+}
+
+// 文章页：顶部阅读进度 + 右侧目录高亮
+const article = document.querySelector(".article");
+const progress = document.querySelector(".read-progress");
+if (article && progress) {
+  const tocLinks = [...document.querySelectorAll(".article-rail nav a")];
+  const headings = tocLinks
+    .map(link => ({ link, el: document.getElementById(link.getAttribute("href").slice(1)) }))
+    .filter(item => item.el);
+
+  function updateProgress() {
+    const rect = article.getBoundingClientRect();
+    const total = article.offsetHeight - window.innerHeight * 0.35;
+    const passed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
+    progress.style.width = total > 0 ? `${(passed / total) * 100}%` : "0";
+  }
+
+  function updateToc() {
+    if (!headings.length) return;
+    let current = headings[0];
+    for (const item of headings) {
+      if (item.el.getBoundingClientRect().top <= 150) current = item;
+    }
+    headings.forEach(item => item.link.classList.toggle("active", item === current));
+  }
+
+  let ticking = false;
+  addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      updateProgress();
+      updateToc();
+      ticking = false;
+    });
+  }, { passive: true });
+  updateProgress();
+  updateToc();
 }
 
 function readNumber(key) {

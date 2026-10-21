@@ -537,7 +537,8 @@
     const lead = form.lead.value.trim() || form.excerpt.value.trim();
     const category = form.category.value.trim() || "随记";
     const date = form.date.value.trim();
-    frame.srcdoc = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/style.css"></head><body style="background:#fff"><main style="padding:20px"><article class="article"><p class="eyebrow"><i></i>${escapeHtml(category)} · ${escapeHtml(date)}</p><h1>${escapeHtml(title).replace("：", "：<br>")}</h1>${lead ? `<p class="article-lead">${escapeHtml(lead)}</p>` : ""}<em></em>${form.content.value}</article></main></body></html>`;
+    const dark = document.documentElement.dataset.theme === "dark";
+    frame.srcdoc = `<!DOCTYPE html><html lang="zh-CN"${dark ? ' data-theme="dark"' : ""}><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/enhance.css"></head><body style="background:var(--bg)"><main style="padding:20px"><article class="article"><p class="eyebrow"><i></i>${escapeHtml(category)} · ${escapeHtml(date)}</p><h1>${escapeHtml(title).replace("：", "：<br>")}</h1>${lead ? `<p class="article-lead">${escapeHtml(lead)}</p>` : ""}<em></em>${form.content.value}</article></main></body></html>`;
     if (noteEl) noteEl.textContent = `预览已更新 ${clock()}`;
   }
 
@@ -643,4 +644,10 @@
   function escapeHtml(value) {
     return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
+
+  // 主题切换时重画预览 iframe，让右侧文章预览跟着深浅色走
+  new MutationObserver(renderPreview).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"]
+  });
 })();

@@ -6,6 +6,9 @@
 # 本机预览用的密钥(GitHub Token 等),绝不进仓库
 .dev.vars
 
+# 改版预览，只在本机审查用
+.preview/
+
 # 常见开发产物
 node_modules/
 .DS_Store

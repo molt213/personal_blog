@@ -7,6 +7,15 @@ export async function getGuestbookMessages(env) {
   return results;
 }
 
+export async function countGuestbookMessages(env) {
+  try {
+    const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM messages").first();
+    return Math.max(0, Number(row && row.count) || 0);
+  } catch (error) {
+    return 0;
+  }
+}
+
 export async function createGuestbookMessage(request, env, ownerEmail) {
   const form = await request.formData();
   const rawName = String(form.get("name") || "").trim();

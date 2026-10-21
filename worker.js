@@ -1,23 +1,22 @@
 import { SITE } from "./content/site.js";
-import homeContent from "./content/pages/home.html";
 import guestbookContent from "./content/pages/guestbook.html";
 import aboutContent from "./content/pages/about.html";
 import linksContent from "./content/pages/links.html";
 import { POSTS } from "./content/posts/index.js";
 import { LINKS } from "./content/links.js";
 import { renderPage } from "./src/site/layout.js";
+import { renderHomePage } from "./src/site/home-page.js";
 import { renderPostsPage } from "./src/site/posts-page.js";
 import { renderArticlePage } from "./src/site/article-page.js";
 import { renderLinksPage } from "./src/site/links-page.js";
 import { renderAdminPage } from "./src/site/admin-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
-import { getGuestbookMessages, createGuestbookMessage } from "./src/api/guestbook.js";
+import { getGuestbookMessages, createGuestbookMessage, countGuestbookMessages } from "./src/api/guestbook.js";
 import { recordVisit, recordPostView, readPostViews, readPostViewsMap } from "./src/api/views.js";
 import { readPostBody, withCovers } from "./src/services/post-content.js";
 import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft, uploadImage, listDrafts, removeDraft } from "./src/api/admin.js";
 
 const PAGES = {
-  "/": { title: "首页", active: "home", content: homeContent },
   "/guestbook": { title: "留言板", active: "guestbook", content: guestbookContent, guestbook: true },
   "/about": { title: "关于", active: "about", content: aboutContent }
 };
@@ -28,6 +27,22 @@ export default {
 
     if (path === "/robots.txt") return text(renderRobotsTxt(SITE.url));
     if (path === "/sitemap.xml") return xml(renderSitemap(SITE.url, POSTS));
+
+    if (path === "/") {
+      const posts = await withCovers(env, request, POSTS);
+      const visit = await recordVisit(env, SITE.launchDate, false);
+      const days = visit.ok
+        ? visit.days
+        : Math.max(1, Math.floor((Date.now() - new Date(SITE.launchDate).getTime()) / 86400000) + 1);
+      const messages = await countGuestbookMessages(env);
+      return html(renderPage({
+        title: "首页",
+        active: "home",
+        content: renderHomePage({ posts, stats: { views: visit.ok ? visit.views : 0, days, messages } }),
+        site: SITE,
+        canonicalUrl: `${SITE.url}/`
+      }));
+    }
 
     if (path === "/posts") {
       const posts = await withCovers(env, request, POSTS);
@@ -46,10 +61,11 @@ export default {
       const content = await readPostBody(env, request, post.slug);
       if (content === null) return new Response("Not Found", { status: 404 });
       const views = await readPostViews(env, post.slug);
+      const related = POSTS.filter(item => item.slug !== post.slug).slice(0, 2);
       return html(renderPage({
         title: post.title,
         active: "posts",
-        content: renderArticlePage({ ...post, content, views }),
+        content: renderArticlePage({ ...post, content, views, related }),
         site: SITE,
         canonicalUrl: `${SITE.url}${path}`
       }));
@@ -64,7 +80,8 @@ export default {
         site: SITE,
         styles: ["/admin.css"],
         scripts: ["/admin.js"],
-        noindex: true
+        noindex: true,
+        footer: false
       }));
     }
 
