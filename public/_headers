@@ -1,0 +1,5 @@
+# 下载目录里的文件一律当附件，不在浏览器里直接打开。
+# 这样即使有人传了网页类文件，也不会在本站域名下执行。
+/downloads/*
+  Content-Disposition: attachment
+  X-Content-Type-Options: nosniff

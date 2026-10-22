@@ -50,19 +50,23 @@
 
 ## 加一个下载资料
 
-1. 把文件放进 `public/downloads/`，文件名用英文、数字和短横线，例如 `ecut-803-geology-exams-2021-2026.zip`。也可以直接在 GitHub 网页上进入这个目录，用「Add file → Upload files」上传。
-2. 打开 `content/downloads.js`，在列表里加一项：
+**推荐：用后台的「资料下载」面板。** 打开 <https://molt213.top/admin>，展开文章编辑区上面的「资料下载」，选文件、填标题、勾选确认，点「上传资料」即可。后台会自动把文件写进 `public/downloads/`，并把条目加到 `content/downloads.json`，大约一分钟后线上更新。单个文件上限 20 MB。
 
-   ```js
+**手动加：**
+
+1. 把文件放进 `public/downloads/`，文件名用英文、数字和短横线，例如 `ecut-803-geology-exams-2021-2026.zip`。也可以直接在 GitHub 网页上进入这个目录，用「Add file → Upload files」上传。
+2. 打开 `content/downloads.json`，在数组最前面加一项：
+
+   ```json
    {
-     title: "显示在页面上的标题",
-     file: "/downloads/文件名.zip",
-     format: "ZIP",
-     size: "1.1 MB",
-     count: "6 份 PDF",
-     date: "2026-10-22",
-     description: "一句话说明里面是什么。",
-     sha256: "可选的校验值"
+     "title": "显示在页面上的标题",
+     "file": "/downloads/文件名.zip",
+     "format": "ZIP",
+     "size": "1.1 MB",
+     "count": "6 份 PDF",
+     "date": "2026-10-22",
+     "description": "一句话说明里面是什么。",
+     "sha256": "可选的校验值"
    }
    ```
 

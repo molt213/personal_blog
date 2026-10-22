@@ -4,6 +4,8 @@ import { firstImageOf, pickImageUrl } from "../services/post-content.js";
 const POSTS_PATH = "content/posts/posts.json";
 const BODY_DIR = "public/posts/";
 const IMAGE_DIR = "public/images/";
+const DOWNLOADS_PATH = "content/downloads.json";
+const DOWNLOAD_DIR = "public/downloads/";
 const DRAFT_PREFIX = "draft:";
 // 文章代号：允许英文大小写、数字、下划线和短横线。
 // 老文章里有 Mewtype、kanc_26_9 这种写法，规则太严会把它们过滤掉、也改不了。
@@ -12,6 +14,14 @@ const DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/;
 const IMAGE_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGES_PER_UPLOAD = 10;
+// 静态资源单文件上限是 25 MiB；后台按钮留一点余量，避免大文件把 Worker 内存顶爆。
+const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
+// 只允许文档、压缩包和常见媒体。html/svg/js 这类能在本站执行的文件一律不收。
+const DOWNLOAD_EXTENSIONS = new Set([
+  "zip", "7z", "rar", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+  "txt", "md", "csv", "epub", "mobi", "azw3", "xmind", "ipynb",
+  "png", "jpg", "jpeg", "webp", "gif", "mp3", "mp4", "wav", "m4a"
+]);
 const LIMITS = { title: 120, category: 20, date: 10, excerpt: 200, lead: 200, artLabel: 80, cover: 500, content: 200000 };
 const LABELS = { title: "标题", category: "分类", date: "日期", excerpt: "摘要", lead: "导语", artLabel: "卡片标签", cover: "封面地址", content: "正文" };
 
@@ -158,6 +168,104 @@ export async function uploadImage(env, request) {
   }
 
   return { status: 200, body: { ok: true, urls: changes.map(change => `/${change.path.replace(/^public\//, "")}`) } };
+}
+
+// 上传资料：一次一个文件，写进 public/downloads/，同时把条目加到 content/downloads.json。
+// 扩展名白名单 + 20 MB 上限，避免把能在本站执行的网页文件传上来。
+export async function uploadDownload(env, request) {
+  let form;
+  try {
+    form = await request.formData();
+  } catch (error) {
+    return { status: 400, body: { error: "上传内容格式不对，请重新选择文件" } };
+  }
+
+  if (String(form.get("confirm") || "") !== "1") {
+    return { status: 400, body: { error: "请先勾选“我确认这个文件可以公开分享”" } };
+  }
+
+  const file = form.get("file");
+  if (!file || typeof file === "string") return { status: 400, body: { error: "没有收到文件" } };
+
+  const original = String(file.name || "");
+  const extension = ((original.match(/\.([A-Za-z0-9]+)$/) || [])[1] || "").toLowerCase();
+  if (!DOWNLOAD_EXTENSIONS.has(extension)) {
+    return { status: 400, body: { error: `不支持这种文件类型${extension ? `（.${extension}）` : ""}。可以传 zip / 7z / rar / pdf / Office 文档 / 图片 / 音视频。` } };
+  }
+  if (!file.size) return { status: 400, body: { error: "文件是空的" } };
+  if (file.size > MAX_DOWNLOAD_BYTES) {
+    return { status: 400, body: { error: `文件 ${formatFileSize(file.size)}，超过 20 MB 上限。更大的文件请用 GitHub 网页上传。` } };
+  }
+
+  const fallbackTitle = original.replace(/\.[^.]*$/, "").trim();
+  const title = (String(form.get("title") || "").trim() || fallbackTitle || "未命名资料").slice(0, 120);
+  const description = String(form.get("description") || "").trim().slice(0, 300);
+  const dateInput = String(form.get("date") || "").trim();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateInput) ? dateInput : new Date().toISOString().slice(0, 10);
+
+  if (!githubReady(env)) return { status: 503, body: { error: "后台还没有配置 GitHub 密钥，资料暂时传不上去" } };
+
+  let raw;
+  try {
+    raw = await readRepoFile(env, DOWNLOADS_PATH);
+  } catch (error) {
+    return { status: 502, body: { error: messageOf(error), code: error.code } };
+  }
+
+  let list;
+  try {
+    list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) throw new Error("not-array");
+  } catch (error) {
+    return { status: 500, body: { error: "资料列表 content/downloads.json 格式不对，请先去仓库检查这个文件" } };
+  }
+
+  let bytes = new Uint8Array(await file.arrayBuffer());
+  const sha256 = await sha256Hex(bytes);
+  const content = bytesToBase64(bytes);
+  bytes = null;
+
+  const name = safeDownloadName(extension);
+  const path = `${DOWNLOAD_DIR}${name}`;
+  const entry = {
+    title,
+    file: `/${path.replace(/^public\//, "")}`,
+    format: extension.toUpperCase(),
+    size: formatFileSize(file.size),
+    count: "",
+    date,
+    description,
+    sha256
+  };
+  list.unshift(entry);
+
+  try {
+    await commitChanges(env, [
+      { path, content, encoding: "base64" },
+      { path: DOWNLOADS_PATH, content: `${JSON.stringify(list, null, 2)}\n` }
+    ], `上传资料：${title}`);
+  } catch (error) {
+    return { status: error.code === "conflict" ? 409 : 502, body: { error: messageOf(error), code: error.code } };
+  }
+
+  return { status: 200, body: { ok: true, title, url: entry.file, size: entry.size, sha256 } };
+}
+
+function safeDownloadName(ext) {
+  const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(3)), byte => byte.toString(16).padStart(2, "0")).join("");
+  return `download-${stamp}-${salt}.${ext}`;
+}
+
+function formatFileSize(bytes) {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 // 文件名只保留中英文、数字、短横线和点，再补上日期和随机后缀，避免重名和路径穿越

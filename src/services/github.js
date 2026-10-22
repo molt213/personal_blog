@@ -43,7 +43,7 @@ async function commitViaGitData(env, changes, message) {
     const blob = await api(env, `/repos/${repo(env)}/git/blobs`, {
       method: "POST",
       body: JSON.stringify({ content, encoding: "base64" })
-    }, "写入文件内容");
+    }, "写入文件内容", 30_000);
     if (!blob.ok) throw await apiError(blob, "写入文件内容");
     tree.push({ path: change.path, mode: "100644", type: "blob", sha: (await blob.json()).sha });
   }
@@ -97,7 +97,7 @@ async function commitViaContents(env, changes, message) {
     const written = await api(env, `/repos/${repo(env)}/contents/${encodePath(change.path)}`, {
       method: "PUT",
       body: JSON.stringify(body)
-    }, "写入文件");
+    }, "写入文件", 30_000);
     if (!written.ok) throw await apiError(written, "写入文件");
     commit = (await written.json()).commit?.sha || commit;
   }
@@ -121,8 +121,9 @@ async function headCommit(env) {
   return { sha: commitSha, tree: treeSha };
 }
 
-// 所有出站请求都走这里：只允许 https://api.github.com，10 秒超时，Token 不出现在报错里
-async function api(env, path, init = {}, step = "请求 GitHub") {
+// 所有出站请求都走这里：只允许 https://api.github.com，默认 10 秒超时，Token 不出现在报错里。
+// 上传二进制文件时单独给 30 秒，避免 20 MB 的 blob 在慢一点的链路上被误判超时。
+async function api(env, path, init = {}, step = "请求 GitHub", timeoutMs = 10_000) {
   if (!githubReady(env)) throw fail("后台还没有配置好 GitHub 密钥", "not-configured");
 
   const url = new URL(`${API_BASE}${path}`);
@@ -137,7 +138,7 @@ async function api(env, path, init = {}, step = "请求 GitHub") {
       "Content-Type": "application/json"
     },
     body: init.body,
-    signal: AbortSignal.timeout(10_000)
+    signal: AbortSignal.timeout(timeoutMs)
   });
 }
 

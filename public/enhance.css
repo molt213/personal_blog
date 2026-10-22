@@ -1730,3 +1730,11 @@ html[data-theme="dark"] .cmdk-results::-webkit-scrollbar-thumb:hover {
 .mobile-header nav::-webkit-scrollbar {
   display: none;
 }
+
+/* 后台「资料上传」的提示文字 */
+[data-theme="dark"] #dl-hint.success {
+  color: #7ee0a8;
+}
+[data-theme="dark"] #dl-hint.error {
+  color: #ff8a8a;
+}

@@ -16,7 +16,7 @@ import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage, countGuestbookMessages } from "./src/api/guestbook.js";
 import { recordVisit, recordPostView, readPostViews, readPostViewsMap } from "./src/api/views.js";
 import { readPostBody, withCovers } from "./src/services/post-content.js";
-import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft, uploadImage, listDrafts, removeDraft } from "./src/api/admin.js";
+import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDraft, uploadImage, uploadDownload, listDrafts, removeDraft } from "./src/api/admin.js";
 
 const PAGES = {
   "/guestbook": { title: "留言板", active: "guestbook", content: guestbookContent, guestbook: true },
@@ -165,6 +165,7 @@ async function adminApi(request, env, path) {
   if (method === "GET" && path === "/api/admin/draft") return adminJson(await readDraft(env, searchParams.get("slug")));
 
   if (method === "POST" && path === "/api/admin/upload") return adminJson(await uploadImage(env, request));
+  if (method === "POST" && path === "/api/admin/upload-download") return adminJson(await uploadDownload(env, request));
 
   if (method === "POST" && (path === "/api/admin/publish" || path === "/api/admin/delete" || path === "/api/admin/draft" || path === "/api/admin/delete-draft")) {
     const payload = await readJson(request);

@@ -1,14 +1,4 @@
-// 资料下载列表。加文件时：把文件放进 public/downloads/，再在这里加一条。
-// size 是文件的实际大小，替换文件后记得一起改。
-export const DOWNLOADS = [
-  {
-    title: "东华理工大学 803 地质学基础历年试卷（2021–2026）",
-    file: "/downloads/ecut-803-geology-exams-2021-2026.zip",
-    format: "ZIP",
-    size: "1.1 MB",
-    count: "6 份 PDF",
-    date: "2026-10-22",
-    description: "2021–2026 年 803 地质学基础试卷，共 6 份 PDF。2021 年那份科目名是「普通地质学」，也一并收在里面。",
-    sha256: "48f6f37f77f6923d5a7e7dcbc5684df414e37480d5f09919438bb9151450cf79"
-  }
-];
+// 资料下载列表。后台的「上传资料」按钮会自动写 downloads.json；
+// 手动加文件时，把文件放进 public/downloads/，再在 downloads.json 里加一条。
+import downloads from "./downloads.json";
+export const DOWNLOADS = downloads;
