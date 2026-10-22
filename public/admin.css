@@ -348,33 +348,51 @@
   background: #fff;
 }
 
-/* 资料上传面板：折叠起来只占一行，展开后是文件选择 + 标题 + 说明 */
+/* 后台两个页面之间的切换 */
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  margin: -18px 0 18px;
+}
+.admin-tabs a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--soft);
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 800;
+}
+.admin-tabs a.active {
+  color: var(--blue);
+  background: var(--blue-wash);
+}
+
+/* 资料管理页 */
 .admin-downloads {
   padding: 0 24px;
   border-radius: var(--radius);
   background: var(--card);
 }
-.admin-downloads summary {
+.admin-downloads + .admin-downloads {
+  margin-top: 12px;
+}
+.admin-downloads-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
   padding: 20px 0;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 850;
-  list-style: none;
+  border-bottom: 1px solid var(--line);
 }
-.admin-downloads summary::-webkit-details-marker {
-  display: none;
+.admin-downloads-head h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
 }
-.admin-downloads summary small {
+.admin-downloads-head span {
   color: var(--faint);
   font-size: 11px;
   font-weight: 650;
-}
-.admin-downloads[open] summary {
-  border-bottom: 1px solid var(--line);
 }
 .admin-downloads-body {
   display: grid;
@@ -430,6 +448,64 @@
 #dl-hint.error {
   color: #c0392b;
 }
+.admin-dl-list {
+  display: grid;
+  gap: 8px;
+  padding: 18px 0 24px;
+}
+.admin-dl-list .loading {
+  margin: 0;
+}
+.admin-dl-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 13px;
+  color: var(--ink);
+  background: var(--bg);
+  transition: background 0.18s ease;
+}
+.admin-dl-item:hover {
+  background: var(--blue-wash);
+}
+.admin-dl-format {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--blue);
+  background: var(--blue-wash);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.admin-dl-main {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+.admin-dl-main b {
+  overflow: hidden;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-dl-main small {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 650;
+}
+.admin-dl-open {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
 
 @media (max-width: 1000px) {
   .admin-layout {
@@ -447,6 +523,23 @@
 @media (max-width: 700px) {
   .admin-row {
     grid-template-columns: 1fr;
+  }
+  .admin-downloads {
+    padding: 0 18px;
+  }
+  .admin-dl-item {
+    padding: 12px;
+  }
+  .admin-dl-format {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  .admin-dl-main b {
+    white-space: normal;
+  }
+  .admin-dl-open {
+    display: none;
   }
   .admin-fields {
     padding: 20px;

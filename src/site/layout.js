@@ -53,7 +53,7 @@ export function renderPage({ title, active, content, site, canonicalUrl, guestbo
       <p class="side-caption">${site.tagline}</p>
       <nav class="side-nav" aria-label="站点导航">${nav}</nav>
       <button class="side-search" type="button" data-open-search><span aria-hidden="true">⌕</span>搜索小站 <kbd>Ctrl K</kbd></button>
-      <div class="side-bottom"><em></em><p id="stats">正在记录相遇的次数…</p><a href="mailto:${site.contactEmail}">写封邮件 ↗</a><button class="theme-toggle" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>深色模式</span></button></div>
+      <div class="side-bottom"><em></em><p id="stats">正在记录相遇的次数…</p><a href="mailto:${site.contactEmail}">写封邮件 ↗</a><a class="side-admin" href="/admin">后台登录 ↗</a><button class="theme-toggle" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>深色模式</span></button></div>
     </aside>
     <header class="mobile-header">
       <a class="brand" href="/"><b class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></b>${site.name}</a>
@@ -88,6 +88,7 @@ function renderFooter(site) {
         <a href="/links">友情链接</a>
         <a href="/guestbook">留言板</a>
         <a href="/about">关于</a>
+        <a href="/admin">后台</a>
         <a href="mailto:${site.contactEmail}">写信</a>
       </nav>
       <div class="footer-mail"><small>CONTACT</small><a href="mailto:${site.contactEmail}">${site.contactEmail}</a></div>

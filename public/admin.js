@@ -32,19 +32,10 @@
   const btnPreview = $("admin-preview");
   const btnDelete = $("admin-delete");
   const btnPublish = $("admin-publish");
-  const dlFileEl = $("dl-file");
-  const dlPickEl = $("dl-pick");
-  const dlNameEl = $("dl-file-name");
-  const dlTitleEl = $("dl-title");
-  const dlDescEl = $("dl-desc");
-  const dlConfirmEl = $("dl-confirm");
-  const dlUploadEl = $("dl-upload");
-  const dlHintEl = $("dl-hint");
 
   const SLUG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/;
   const MAX_CONTENT = 200000;
   const MAX_IMAGES = 10;
-  const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 
   // 图片统一用带说明的图注模板：上传、拖放、粘贴、外链都插入同一套 <figure class="article-image"> 结构，
   // 图片下方的说明文字对应 style.css 里的 .article .article-image figcaption
@@ -77,7 +68,6 @@
   buildToolbar();
   bindFields();
   bindUpload();
-  bindDownloadUpload();
   bindShortcuts();
 
   btnNew.addEventListener("click", newPost);
@@ -167,66 +157,6 @@
     document.addEventListener("drop", event => {
       if (event.dataTransfer && event.dataTransfer.files.length) event.preventDefault();
     });
-  }
-
-  function bindDownloadUpload() {
-    if (!dlPickEl || !dlFileEl) return;
-    dlPickEl.addEventListener("click", () => dlFileEl.click());
-    dlFileEl.addEventListener("change", () => {
-      const file = dlFileEl.files && dlFileEl.files[0];
-      if (dlNameEl) dlNameEl.textContent = file ? `${file.name}（${formatFileSize(file.size)}）` : "还没有选择文件";
-      if (file && dlTitleEl && !dlTitleEl.value.trim()) {
-        dlTitleEl.value = file.name.replace(/\.[^.]+$/, "");
-      }
-    });
-    if (dlUploadEl) dlUploadEl.addEventListener("click", uploadDownload);
-  }
-
-  async function uploadDownload() {
-    const file = dlFileEl && dlFileEl.files ? dlFileEl.files[0] : null;
-    if (!file) return setDownloadHint("先选一个文件。", "error");
-    if (file.size > MAX_DOWNLOAD_BYTES) {
-      return setDownloadHint(`文件 ${formatFileSize(file.size)}，超过 20 MB 上限。`, "error");
-    }
-    if (!dlConfirmEl || !dlConfirmEl.checked) {
-      return setDownloadHint("请先勾选“我确认这个文件可以公开分享”。", "error");
-    }
-
-    const body = new FormData();
-    body.append("file", file);
-    body.append("title", dlTitleEl ? dlTitleEl.value.trim() : "");
-    body.append("description", dlDescEl ? dlDescEl.value.trim() : "");
-    body.append("date", dateToday().replace(/\./g, "-"));
-    body.append("confirm", "1");
-
-    if (dlUploadEl) dlUploadEl.disabled = true;
-    setDownloadHint(`正在上传 ${file.name}…大文件可能要几十秒。`);
-
-    try {
-      const data = await api("/api/admin/upload-download", body);
-      setDownloadHint(`已上传「${data.title}」。约 1 分钟后刷新 /downloads 就能看到。`, "success");
-      dlFileEl.value = "";
-      if (dlNameEl) dlNameEl.textContent = "还没有选择文件";
-      if (dlTitleEl) dlTitleEl.value = "";
-      if (dlDescEl) dlDescEl.value = "";
-      if (dlConfirmEl) dlConfirmEl.checked = false;
-    } catch (error) {
-      setDownloadHint(error.message, "error");
-    } finally {
-      if (dlUploadEl) dlUploadEl.disabled = false;
-    }
-  }
-
-  function setDownloadHint(message, kind = "") {
-    if (!dlHintEl) return;
-    dlHintEl.textContent = message;
-    dlHintEl.className = kind;
-  }
-
-  function formatFileSize(bytes) {
-    if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-    if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
-    return `${bytes} B`;
   }
 
   function bindShortcuts() {

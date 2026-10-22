@@ -1738,3 +1738,13 @@ html[data-theme="dark"] .cmdk-results::-webkit-scrollbar-thumb:hover {
 [data-theme="dark"] #dl-hint.error {
   color: #ff8a8a;
 }
+
+/* 侧栏底部的后台入口，比邮件链接低调一点 */
+.side-bottom .side-admin {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 700;
+}
+.side-bottom .side-admin:hover {
+  color: var(--blue);
+}

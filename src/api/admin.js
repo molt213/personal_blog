@@ -248,7 +248,7 @@ export async function uploadDownload(env, request) {
     return { status: error.code === "conflict" ? 409 : 502, body: { error: messageOf(error), code: error.code } };
   }
 
-  return { status: 200, body: { ok: true, title, url: entry.file, size: entry.size, sha256 } };
+  return { status: 200, body: { ok: true, title, url: entry.file, format: entry.format, size: entry.size, date: entry.date, sha256 } };
 }
 
 function safeDownloadName(ext) {

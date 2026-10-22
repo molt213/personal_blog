@@ -5,6 +5,10 @@ export function renderAdminPage() {
   <h1>写作<br><strong>后台</strong></h1>
   <p>左边挑一篇文章，右边写正文。点“发布”会提交到 GitHub，大约一分钟后线上更新。</p>
 </section>
+<nav class="admin-tabs" aria-label="后台导航">
+  <a class="active" href="/admin">写作</a>
+  <a href="/admin/downloads">资料管理</a>
+</nav>
 <section class="admin-layout">
   <aside class="admin-side">
     <button class="admin-new" id="admin-new" type="button">＋ 新建文章</button>
@@ -17,23 +21,6 @@ export function renderAdminPage() {
   </aside>
   <div class="admin-main">
     <p class="admin-warn" id="admin-warn" hidden></p>
-    <details class="admin-downloads">
-      <summary><span>资料下载</span><small>上传文件到 /downloads</small></summary>
-      <div class="admin-downloads-body">
-        <input id="dl-file" type="file" accept=".zip,.7z,.rar,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.epub,.mobi,.azw3,.xmind,.ipynb,.png,.jpg,.jpeg,.webp,.gif,.mp3,.mp4,.wav,.m4a" hidden>
-        <div class="admin-dl-row">
-          <button class="admin-ghost" id="dl-pick" type="button">选择文件</button>
-          <span id="dl-file-name">还没有选择文件</span>
-        </div>
-        <input id="dl-title" type="text" maxlength="120" placeholder="资料标题（留空就用文件名）">
-        <input id="dl-desc" type="text" maxlength="300" placeholder="一句话说明（可选）">
-        <label class="admin-dl-check"><input id="dl-confirm" type="checkbox"> 我确认这个文件可以公开分享，不是受版权保护的整本书或付费课程</label>
-        <div class="admin-dl-actions">
-          <button class="admin-publish" id="dl-upload" type="button">上传资料　↗</button>
-          <span id="dl-hint" role="status" aria-live="polite"></span>
-        </div>
-      </div>
-    </details>
     <div class="admin-fields">
       <label for="f-title">标题</label>
       <input id="f-title" type="text" maxlength="120" placeholder="文章的标题">

@@ -12,6 +12,7 @@ import { renderArticlePage } from "./src/site/article-page.js";
 import { renderLinksPage } from "./src/site/links-page.js";
 import { renderDownloadsPage } from "./src/site/downloads-page.js";
 import { renderAdminPage } from "./src/site/admin-page.js";
+import { renderAdminDownloadsPage } from "./src/site/admin-downloads-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage, countGuestbookMessages } from "./src/api/guestbook.js";
 import { recordVisit, recordPostView, readPostViews, readPostViewsMap } from "./src/api/views.js";
@@ -83,6 +84,20 @@ export default {
         site: SITE,
         styles: ["/admin.css"],
         scripts: ["/admin.js"],
+        noindex: true,
+        footer: false
+      }));
+    }
+
+    if (path === "/admin/downloads") {
+      if (!isOwner(request, env)) return forbidden();
+      return html(renderPage({
+        title: "资料管理",
+        active: "",
+        content: renderAdminDownloadsPage(),
+        site: SITE,
+        styles: ["/admin.css"],
+        scripts: ["/admin-downloads.js"],
         noindex: true,
         footer: false
       }));

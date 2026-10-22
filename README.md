@@ -29,7 +29,7 @@ public/         网站的外观、浏览器交互和文章正文
 | 手动改文章资料（标题、日期、摘要） | `content/posts/posts.json` |
 | 手动改文章正文 | `public/posts/<网址代号>.html` |
 | 加友情链接 | `content/links.js` |
-| 加下载资料 | 后台「资料下载」面板，或 `content/downloads.json` + `public/downloads/` |
+| 加下载资料 | 后台 `/admin/downloads`，或 `content/downloads.json` + `public/downloads/` |
 | 改基础颜色、字号 | `public/style.css` |
 | 改版心、首页/随记/文章新版式、深色模式 | `public/enhance.css` |
 
@@ -58,6 +58,7 @@ public/
   enhance.css             版心、首页/随记/文章新版式、深色模式
   showcase.js             命令面板、图片灯箱、主题切换
   admin.css / admin.js    写作后台的样式和浏览器交互
+  admin-downloads.js      资料管理页的上传交互
   site.js                 浏览量、随记筛选、阅读进度
   guestbook.js            留言板的浏览器交互
 src/

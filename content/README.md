@@ -50,7 +50,7 @@
 
 ## 加一个下载资料
 
-**推荐：用后台的「资料下载」面板。** 打开 <https://molt213.top/admin>，展开文章编辑区上面的「资料下载」，选文件、填标题、勾选确认，点「上传资料」即可。后台会自动把文件写进 `public/downloads/`，并把条目加到 `content/downloads.json`，大约一分钟后线上更新。单个文件上限 20 MB。
+**推荐：用后台的资料管理页。** 打开 <https://molt213.top/admin/downloads>，选文件、填标题、勾选确认，点「上传资料」即可。后台会自动把文件写进 `public/downloads/`，并把条目加到 `content/downloads.json`，大约一分钟后线上更新。单个文件上限 20 MB。
 
 **手动加：**
 
