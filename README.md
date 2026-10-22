@@ -29,6 +29,7 @@ public/         网站的外观、浏览器交互和文章正文
 | 手动改文章资料（标题、日期、摘要） | `content/posts/posts.json` |
 | 手动改文章正文 | `public/posts/<网址代号>.html` |
 | 加友情链接 | `content/links.js` |
+| 加下载资料 | `content/downloads.js` + `public/downloads/` |
 | 改基础颜色、字号 | `public/style.css` |
 | 改版心、首页/随记/文章新版式、深色模式 | `public/enhance.css` |
 
@@ -47,10 +48,12 @@ worker.js                 只负责把网址分发到页面或接口
 content/
   site.js                 网站基础信息
   links.js                友情链接列表
-  pages/                  首页、关于页、留言页、友链页的文案
+  downloads.js            资料下载列表
+  pages/                  首页、关于页、留言页、友链页、下载页的文案
   posts/posts.json        每篇文章的标题、日期、摘要等资料
 public/
   posts/                  每篇文章的正文（静态文件，运行时读取）
+  downloads/              对外下载的文件（单个不超过 25 MiB）
   style.css               基础视觉样式
   enhance.css             版心、首页/随记/文章新版式、深色模式
   showcase.js             命令面板、图片灯箱、主题切换

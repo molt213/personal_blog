@@ -1582,3 +1582,151 @@ html[data-theme="dark"] .cmdk-results::-webkit-scrollbar-thumb:hover {
   background: #41506e;
   background-clip: padding-box;
 }
+
+/* ---------- 资料下载页 ---------- */
+.dl-grid {
+  display: grid;
+  gap: 14px;
+}
+.dl-card {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.dl-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.dl-badge {
+  display: grid;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--blue);
+  background: var(--blue-wash);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.dl-head h2 {
+  margin: 0 0 7px;
+  font-size: 21px;
+  letter-spacing: -0.04em;
+}
+.dl-head p {
+  margin: 0;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.dl-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.dl-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dl-meta span + span::before {
+  content: "·";
+  margin-right: 10px;
+  color: var(--faint);
+  opacity: 0.6;
+}
+.dl-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 11px;
+  color: var(--ink);
+  background: var(--yellow);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+  transition: 0.18s ease;
+}
+.dl-button:hover {
+  transform: translateY(-2px);
+  background: #f0bc3c;
+}
+.dl-check {
+  color: var(--faint);
+  font-size: 12px;
+}
+.dl-check summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.dl-check code {
+  display: block;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--bg);
+  font-size: 11px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.dl-note {
+  margin: 26px 0 0;
+  padding: 20px 23px;
+  border-radius: 17px;
+  background: var(--blue-wash);
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.dl-note a {
+  color: var(--blue);
+  font-weight: 800;
+}
+[data-theme="dark"] .dl-button {
+  color: var(--on-accent);
+}
+@media (max-width: 700px) {
+  .dl-card {
+    padding: 20px;
+  }
+  .dl-top {
+    gap: 14px;
+  }
+  .dl-badge {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 11px;
+  }
+  .dl-head h2 {
+    font-size: 18px;
+  }
+  .dl-foot {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .dl-button {
+    justify-content: center;
+  }
+}
+
+/* 手机顶部导航可以横向滑动，但不显示滚动条 */
+.mobile-header nav {
+  scrollbar-width: none;
+}
+.mobile-header nav::-webkit-scrollbar {
+  display: none;
+}

@@ -5,9 +5,11 @@
 - `文章写作速查表.md`：写文章时可直接复制的常用 HTML 模板。
 - `site.js`：网站名称、简介、联系邮箱与开站日期。
 - `links.js`：友情链接列表，加友链改这里。
+- `downloads.js`：资料下载列表，加下载文件改这里。
 - `pages/home.html`：首页文案。里面的 `{{...}}` 是程序填文章和数据的位置，不要删。
 - `pages/about.html`：关于页面文案。
 - `pages/guestbook.html`：留言板页面上的说明文字。
+- `pages/downloads.html`：下载页顶部的标题和介绍文字。
 - `posts/posts.json`：每篇文章的标题、日期、摘要、导语等资料。
 - 文章正文放在 `public/posts/<网址代号>.html`。
 
@@ -45,5 +47,29 @@
 > 文章列表的封面默认取正文里的第一张图片；在 `posts.json` 里写了 `cover` 就用 `cover`。
 >
 > 文章页右侧的目录会根据正文里的 `<h2>` 自动生成，不需要手写锚点；首页的最新文章、文章数、阅读量和留言数也会自动读取，不用手动改。
+
+## 加一个下载资料
+
+1. 把文件放进 `public/downloads/`，文件名用英文、数字和短横线，例如 `ecut-803-geology-exams-2021-2026.zip`。也可以直接在 GitHub 网页上进入这个目录，用「Add file → Upload files」上传。
+2. 打开 `content/downloads.js`，在列表里加一项：
+
+   ```js
+   {
+     title: "显示在页面上的标题",
+     file: "/downloads/文件名.zip",
+     format: "ZIP",
+     size: "1.1 MB",
+     count: "6 份 PDF",
+     date: "2026-10-22",
+     description: "一句话说明里面是什么。",
+     sha256: "可选的校验值"
+   }
+   ```
+
+3. 提交后 Cloudflare 会自动部署，下载页是 `/downloads`。
+
+> Cloudflare 单个静态文件最大 **25 MiB**，超过就放不上去。Git 会保留文件的每个版本，所以大文件不要反复替换，不然仓库会越来越大。
+>
+> 只放你有权分享的资料。教材扫描件、付费课程这类受版权保护的内容不要公开上传。
 
 不要修改 `src/` 或 `worker.js`，除非要改变网站功能或网址规则。

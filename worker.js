@@ -2,6 +2,7 @@ import { SITE } from "./content/site.js";
 import guestbookContent from "./content/pages/guestbook.html";
 import aboutContent from "./content/pages/about.html";
 import linksContent from "./content/pages/links.html";
+import downloadsContent from "./content/pages/downloads.html";
 import { POSTS } from "./content/posts/index.js";
 import { LINKS } from "./content/links.js";
 import { renderPage } from "./src/site/layout.js";
@@ -9,6 +10,7 @@ import { renderHomePage } from "./src/site/home-page.js";
 import { renderPostsPage } from "./src/site/posts-page.js";
 import { renderArticlePage } from "./src/site/article-page.js";
 import { renderLinksPage } from "./src/site/links-page.js";
+import { renderDownloadsPage } from "./src/site/downloads-page.js";
 import { renderAdminPage } from "./src/site/admin-page.js";
 import { renderRobotsTxt, renderSitemap } from "./src/site/search-index.js";
 import { getGuestbookMessages, createGuestbookMessage, countGuestbookMessages } from "./src/api/guestbook.js";
@@ -18,7 +20,8 @@ import { isOwner, listPosts, getPost, publishPost, deletePost, readDraft, saveDr
 
 const PAGES = {
   "/guestbook": { title: "留言板", active: "guestbook", content: guestbookContent, guestbook: true },
-  "/about": { title: "关于", active: "about", content: aboutContent }
+  "/about": { title: "关于", active: "about", content: aboutContent },
+  "/downloads": { title: "资料下载", active: "downloads", content: downloadsContent + renderDownloadsPage() }
 };
 
 export default {
@@ -101,6 +104,8 @@ export default {
         canonicalUrl: `${SITE.url}${path}`
       }));
     }
+
+    if (path === "/downloads/") return Response.redirect(new URL("/downloads", request.url).toString(), 308);
 
     const page = PAGES[path];
     if (page) return html(renderPage({ ...page, site: SITE, canonicalUrl: `${SITE.url}${path}` }));

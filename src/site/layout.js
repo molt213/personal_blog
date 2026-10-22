@@ -4,6 +4,7 @@ import { POSTS } from "../../content/posts/index.js";
 const PAGE_ITEMS = [
   { type: "页面", title: "首页", desc: "让想法有处慢慢停靠", meta: "HOME", href: "/" },
   { type: "页面", title: "随记", desc: "想到什么写什么", meta: "WRITING", href: "/posts" },
+  { type: "页面", title: "资料下载", desc: "试卷和复习资料", meta: "DOWNLOADS", href: "/downloads" },
   { type: "页面", title: "友情链接", desc: "网络里的邻居们", meta: "FRIENDS", href: "/links" },
   { type: "页面", title: "留言板", desc: "留下你的痕迹", meta: "GUESTBOOK", href: "/guestbook" },
   { type: "页面", title: "关于", desc: "个人角落", meta: "ABOUT", href: "/about" }
@@ -83,6 +84,7 @@ function renderFooter(site) {
       <nav class="footer-nav" aria-label="页脚导航">
         <a href="/">首页</a>
         <a href="/posts">随记</a>
+        <a href="/downloads">资料</a>
         <a href="/links">友情链接</a>
         <a href="/guestbook">留言板</a>
         <a href="/about">关于</a>
