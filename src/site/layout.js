@@ -103,10 +103,20 @@ function renderPlayer() {
         <button type="button" data-next aria-label="下一首" disabled>
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.8 15.2 12 6 18.2Z"/><path d="M18 5.5v13"/></svg>
         </button>
+        <button type="button" data-mode aria-label="播放模式：顺序播放" title="顺序播放" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" data-mode-icon><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="mode-label" data-mode-label>顺序</span>
+        </button>
         <button type="button" data-list-toggle aria-expanded="false" disabled>
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
           列表 <span data-count>0</span>
         </button>
+      </div>
+      <div class="splayer-volume">
+        <button type="button" data-mute aria-label="静音" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" data-mute-icon><path d="M11 5 6.5 8.8H3v6.4h3.5L11 19z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+        </button>
+        <input type="range" data-volume min="0" max="100" step="1" value="60" aria-label="音量" disabled>
       </div>
       <div class="splayer-drawer" data-playlist hidden></div>
     </section>

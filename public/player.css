@@ -16,6 +16,12 @@
   pointer-events: none;
 }
 
+/* 歌单抽屉要压在正文之上，所以整个侧栏得先有层叠上下文；
+   否则正文里带 position 的卡片（DOM 在后面）会盖住抽屉。 */
+.sidebar {
+  z-index: 40;
+}
+
 /* ---------- 线性图标 ---------- */
 .splayer .icon {
   display: block;
@@ -78,11 +84,13 @@
   aspect-ratio: 1;
 }
 .splayer-art img {
-  position: relative;
+  position: absolute;
   z-index: 2;
+  top: 8%;
+  left: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 84%;
+  height: 84%;
   border-radius: 14px;
   object-fit: cover;
   opacity: 0;
@@ -91,20 +99,28 @@
 .splayer-art img.is-loaded {
   opacity: 1;
 }
+/* 封面只占左边 84%，右边留出黑胶；播放时黑胶再往右滑一点。 */
 .splayer-vinyl {
   position: absolute;
   z-index: 1;
-  top: 6%;
-  right: -7%;
-  width: 88%;
-  height: 88%;
+  top: 8%;
+  right: 0;
+  width: 84%;
+  height: 84%;
   border-radius: 50%;
   background: repeating-radial-gradient(circle, #0d1422 0 2px, #1b2537 2px 3px);
   transition: transform 0.45s ease;
 }
+.splayer-vinyl::after {
+  content: "";
+  position: absolute;
+  inset: 34%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--card) 0 15%, var(--yellow) 16%);
+}
 .splayer.is-playing .splayer-vinyl {
   animation: player-spin 8s linear infinite;
-  transform: translateX(13%);
+  transform: translateX(5%);
 }
 .splayer-play {
   position: absolute;
@@ -199,6 +215,7 @@
   background: var(--bg);
   font-size: 10px;
   font-weight: 800;
+  white-space: nowrap;
 }
 .splayer-controls [data-prev],
 .splayer-controls [data-next] {
@@ -218,11 +235,106 @@
   color: var(--blue);
   background: var(--blue-wash);
 }
+.splayer-controls [data-mode] {
+  gap: 4px;
+  padding: 0 8px;
+}
+.splayer-controls [data-mode] .icon {
+  width: 12px;
+  height: 12px;
+}
+.splayer-controls [data-mode] .mode-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 音量 ---------- */
+.splayer-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.splayer-volume button {
+  display: inline-grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  place-items: center;
+  color: var(--soft);
+  background: var(--bg);
+}
+.splayer-volume button:hover {
+  color: var(--blue);
+  background: var(--blue-wash);
+}
+.splayer-volume .icon {
+  width: 12px;
+  height: 12px;
+}
+.splayer-volume input[type="range"] {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+.splayer-volume input[type="range"]:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+.splayer-volume input[type="range"]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+.splayer-volume input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--blue) 0 var(--vol, 60%), var(--line) var(--vol, 60%) 100%);
+}
+.splayer-volume input[type="range"]::-webkit-slider-thumb {
+  width: 9px;
+  height: 9px;
+  margin-top: -3.5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue);
+  -webkit-appearance: none;
+}
+.splayer-volume input[type="range"]::-moz-range-track {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.splayer-volume input[type="range"]::-moz-range-progress {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+}
+.splayer-volume input[type="range"]::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue);
+}
 
 /* ---------- 歌单抽屉 ---------- */
 .splayer-drawer {
   position: absolute;
-  z-index: 20;
+  z-index: 30;
   bottom: 0;
   left: calc(100% + 12px);
   width: 300px;
@@ -413,6 +525,7 @@ body.is-soft-navigating .soft-nav-progress {
   }
   .splayer.is-mobile .splayer-head,
   .splayer.is-mobile .splayer-time,
+  .splayer.is-mobile .splayer-volume,
   .splayer.is-mobile .splayer-vinyl {
     display: none;
   }
@@ -449,6 +562,14 @@ body.is-soft-navigating .soft-nav-progress {
   .splayer.is-mobile .splayer-controls [data-prev] {
     display: none;
   }
+  .splayer.is-mobile .splayer-controls [data-mode] {
+    width: 28px;
+    padding: 0;
+    border-radius: 50%;
+  }
+  .splayer.is-mobile .splayer-controls [data-mode] .mode-label {
+    display: none;
+  }
   .splayer.is-mobile .splayer-progress {
     grid-area: progress;
     margin: 2px 0 0;
@@ -471,9 +592,10 @@ body.is-soft-navigating .soft-nav-progress {
       "art head"
       "art meta"
       "art progress"
-      "art controls";
+      "controls controls"
+      "volume volume";
     grid-template-columns: 56px minmax(0, 1fr);
-    gap: 3px 10px;
+    gap: 4px 10px;
     padding: 10px;
   }
   .splayer-head {
@@ -486,10 +608,10 @@ body.is-soft-navigating .soft-nav-progress {
     height: 56px;
   }
   .splayer-vinyl {
-    top: 6%;
-    right: -5%;
-    width: 88%;
-    height: 88%;
+    top: 8%;
+    right: 0;
+    width: 84%;
+    height: 84%;
   }
   .splayer-play {
     bottom: 4px;
@@ -521,7 +643,7 @@ body.is-soft-navigating .soft-nav-progress {
   .splayer-controls {
     grid-area: controls;
     gap: 5px;
-    margin: 0;
+    margin: 8px 0 0;
   }
   .splayer-controls button {
     height: 26px;
@@ -539,6 +661,23 @@ body.is-soft-navigating .soft-nav-progress {
   .splayer-controls [data-list-toggle] .icon {
     width: 11px;
     height: 11px;
+  }
+  .splayer-volume {
+    grid-area: volume;
+    gap: 6px;
+    margin: 4px 0 0;
+  }
+  .splayer-volume button {
+    flex-basis: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  .splayer-volume .icon {
+    width: 10px;
+    height: 10px;
+  }
+  .splayer-volume input[type="range"] {
+    height: 12px;
   }
   .splayer-drawer {
     bottom: 0;
