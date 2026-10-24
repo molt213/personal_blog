@@ -30,14 +30,37 @@ public/         网站的外观、浏览器交互和文章正文
 | 手动改文章正文 | `public/posts/<网址代号>.html` |
 | 加友情链接 | `content/links.js` |
 | 加下载资料 | 后台 `/admin/downloads`，或 `content/downloads.json` + `public/downloads/` |
+| 换侧栏播放器的歌单 | `content/music.js` |
 | 改基础颜色、字号 | `public/style.css` |
 | 改版心、首页/随记/文章新版式、深色模式 | `public/enhance.css` |
 
 ## 界面上的几个小功能
 
 - 侧栏「搜索小站」或 `Ctrl+K`：打开命令面板，可以直接搜文章和页面。
+- 侧栏的「NOW PLAYING」：站点播放器。公开页之间切换时只换正文，播放不会中断；点「列表」展开歌单。手机上会收成底部紧凑条。
 - 侧栏底部（手机在右上角）：切换深色模式，选择会记住。
 - 文章里的图片：点一下放大，左右方向键翻图，`Esc` 关闭。
+- 后台入口在新标签页打开：公开页的播放器继续放，后台照常写。
+
+## 音乐播放器与软导航
+
+侧栏播放器用 APlayer + MetingJS，音频来自网易云。当前 `content/music.js` 里是一首能播的占位单曲；换成你的歌单：
+
+```js
+export const MUSIC = {
+  server: "netease",
+  type: "playlist",
+  id: "你的歌单ID",
+  volume: 0.6
+};
+```
+
+歌单 ID 在网页版歌单地址 `https://music.163.com/#/playlist?id=123456789` 里。改完后提交，Cloudflare 自动部署。
+
+- 公开页（首页、随记、文章、资料、友链、关于、留言板）之间切换时，`soft-nav.js` 只替换正文，侧栏播放器不重建，音乐继续。
+- 后台 `/admin`、`/admin/downloads` 完全不参与软导航，也不加载播放器；后台入口在新标签页打开，公开页的音乐可以继续放。
+- 下载文件、外链、hash 链接、新标签页点击仍然整页加载，不会被软导航拦。
+- MetingJS 走第三方 `api.i-meto.com`，偶发不可用；播放器会提示并跳到下一首，不会卡住页面。
 
 更具体的写文章说明放在 [`content/README.md`](content/README.md) 和 [`content/文章写作速查表.md`](content/文章写作速查表.md)。
 
@@ -47,6 +70,7 @@ public/         网站的外观、浏览器交互和文章正文
 worker.js                 只负责把网址分发到页面或接口
 content/
   site.js                 网站基础信息
+  music.js                侧栏播放器的网易云歌单配置
   links.js                友情链接列表
   downloads.json          资料下载列表（后台「上传资料」会自动写）
   pages/                  首页、关于页、留言页、友链页、下载页的文案
@@ -57,6 +81,10 @@ public/
   style.css               基础视觉样式
   enhance.css             版心、首页/随记/文章新版式、深色模式
   showcase.js             命令面板、图片灯箱、主题切换
+  player.css              侧栏播放器样式
+  player.js               侧栏播放器交互（APlayer + MetingJS）
+  soft-nav.js             公开页软导航（后台不加载）
+  vendor/                 APlayer / MetingJS 本地文件与许可证
   admin.css / admin.js    写作后台的样式和浏览器交互
   admin-downloads.js      资料管理页的上传交互
   site.js                 浏览量、随记筛选、阅读进度

@@ -1,5 +1,6 @@
 import { NAVIGATION } from "../../content/site.js";
 import { POSTS } from "../../content/posts/index.js";
+import { MUSIC } from "../../content/music.js";
 
 const PAGE_ITEMS = [
   { type: "页面", title: "首页", desc: "让想法有处慢慢停靠", meta: "HOME", href: "/" },
@@ -33,17 +34,24 @@ export function renderPage({ title, active, content, site, canonicalUrl, guestbo
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="${site.description}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232864f0'/%3E%3Crect x='8' y='18' width='4' height='7' rx='2' fill='white'/%3E%3Crect x='14' y='12' width='4' height='13' rx='2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='2' fill='white'/%3E%3C/svg%3E">
   ${noindex ? '<meta name="robots" content="noindex">' : ""}
   ${canonicalUrl ? `<link rel="canonical" href="${canonicalUrl}">` : ""}
   <title>${title} · ${site.name}</title>
   <script>try{if(localStorage.getItem("molt213-theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/enhance.css">
+  ${footer ? '<link rel="stylesheet" href="/player.css">' : ""}
   ${styles.map(href => `<link rel="stylesheet" href="${href}">`).join("\n  ")}
   <script>window.__SITE_SEARCH__=${searchJson};</script>
   <script src="/site.js" defer></script>
   <script src="/showcase.js" defer></script>
-  ${guestbook ? '<script src="/guestbook.js" defer></script>' : ""}
+  ${footer ? `
+  <script src="/guestbook.js" defer></script>
+  <script src="/vendor/APlayer.min.js" defer></script>
+  <script src="/vendor/Meting.min.js" defer></script>
+  <script src="/player.js" defer></script>
+  <script src="/soft-nav.js" defer></script>` : ""}
   ${scripts.map(src => `<script src="${src}" defer></script>`).join("\n  ")}
 </head>
 <body>
@@ -53,7 +61,8 @@ export function renderPage({ title, active, content, site, canonicalUrl, guestbo
       <p class="side-caption">${site.tagline}</p>
       <nav class="side-nav" aria-label="站点导航">${nav}</nav>
       <button class="side-search" type="button" data-open-search><span aria-hidden="true">⌕</span>搜索小站 <kbd>Ctrl K</kbd></button>
-      <div class="side-bottom"><em></em><p id="stats">正在记录相遇的次数…</p><a href="mailto:${site.contactEmail}">写封邮件 ↗</a><a class="side-admin" href="/admin">后台登录 ↗</a><button class="theme-toggle" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>深色模式</span></button></div>
+      ${footer ? renderPlayer() : ""}
+      <div class="side-bottom"><em></em><p id="stats">正在记录相遇的次数…</p><a href="mailto:${site.contactEmail}">写封邮件 ↗</a><a class="side-admin" href="/admin" target="_blank" rel="noopener">后台登录 ↗</a><button class="theme-toggle" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>深色模式</span></button></div>
     </aside>
     <header class="mobile-header">
       <a class="brand" href="/"><b class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></b>${site.name}</a>
@@ -67,8 +76,63 @@ export function renderPage({ title, active, content, site, canonicalUrl, guestbo
   </div>
   ${renderCommandPalette()}
   ${renderLightbox()}
+  ${footer ? renderPlayerEngine() : ""}
 </body>
 </html>`;
+}
+
+function renderPlayer() {
+  return `
+  <div class="splayer-slot">
+    <section class="splayer" aria-label="站点播放器">
+      <div class="splayer-head"><span><i></i>NOW PLAYING</span><span data-index>01 / --</span></div>
+      <div class="splayer-art">
+        <img data-cover alt="">
+        <span class="splayer-vinyl" aria-hidden="true"></span>
+        <button class="splayer-play" type="button" data-play aria-label="播放" disabled>
+          <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8 18 12 8.5 18.2Z"/></svg>
+        </button>
+      </div>
+      <div class="splayer-meta"><b data-title>正在载入…</b><small data-artist>—</small></div>
+      <div class="splayer-progress" role="slider" tabindex="0" aria-label="播放进度" aria-disabled="true" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span data-progress-fill></span></div>
+      <div class="splayer-time"><span data-current>0:00</span><span data-duration>0:00</span></div>
+      <div class="splayer-controls">
+        <button type="button" data-prev aria-label="上一首" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.8 8.8 12 18 18.2Z"/><path d="M6 5.5v13"/></svg>
+        </button>
+        <button type="button" data-next aria-label="下一首" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.8 15.2 12 6 18.2Z"/><path d="M18 5.5v13"/></svg>
+        </button>
+        <button type="button" data-list-toggle aria-expanded="false" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+          列表 <span data-count>0</span>
+        </button>
+      </div>
+      <div class="splayer-drawer" data-playlist hidden></div>
+    </section>
+  </div>`;
+}
+
+function renderPlayerEngine() {
+  const id = escapeAttribute(MUSIC.id);
+  const server = escapeAttribute(MUSIC.server);
+  const type = escapeAttribute(MUSIC.type);
+  const volume = Number(MUSIC.volume) || 0.6;
+  return `
+  <meting-js
+    class="site-player-engine"
+    id="${id}"
+    server="${server}"
+    type="${type}"
+    preload="metadata"
+    volume="${volume}"
+    list-folded="true"
+    storage-name="molt213-site-player"
+  ></meting-js>`;
+}
+
+function escapeAttribute(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 function renderFooter(site) {
@@ -88,7 +152,7 @@ function renderFooter(site) {
         <a href="/links">友情链接</a>
         <a href="/guestbook">留言板</a>
         <a href="/about">关于</a>
-        <a href="/admin">后台</a>
+        <a href="/admin" target="_blank" rel="noopener">后台</a>
         <a href="mailto:${site.contactEmail}">写信</a>
       </nav>
       <div class="footer-mail"><small>CONTACT</small><a href="mailto:${site.contactEmail}">${site.contactEmail}</a></div>

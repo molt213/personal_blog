@@ -147,7 +147,10 @@
       } else if (event.key === "Enter") {
         event.preventDefault();
         const item = filtered[active];
-        if (item) location.href = item.href;
+        if (!item) return;
+        closeSearch();
+        if (typeof window.__softNavigate === "function") window.__softNavigate(item.href);
+        else location.href = item.href;
       } else if (event.key === "Escape") {
         event.preventDefault();
         closeSearch();
@@ -167,17 +170,13 @@
   });
 
   // ---------- 文章图片灯箱 ----------
-  const article = document.querySelector(".article");
   const lightbox = document.querySelector(".lightbox");
-  if (!article || !lightbox) return;
-
-  const images = [...article.querySelectorAll("img")];
-  if (!images.length) return;
-
-  const image = lightbox.querySelector(".lightbox-image");
-  const caption = lightbox.querySelector(".lightbox-caption");
-  const counter = lightbox.querySelector(".lightbox-counter");
-  let current = 0;
+  const lightboxImage = lightbox && lightbox.querySelector(".lightbox-image");
+  const lightboxCaption = lightbox && lightbox.querySelector(".lightbox-caption");
+  const lightboxCounter = lightbox && lightbox.querySelector(".lightbox-counter");
+  let lightboxImages = [];
+  let lightboxCurrent = 0;
+  let lightboxBound = false;
 
   function captionOf(source) {
     const figure = source.closest("figure");
@@ -190,50 +189,67 @@
     return clone.textContent.trim();
   }
 
-  function show(index) {
-    current = (index + images.length) % images.length;
-    const source = images[current];
-    image.src = source.currentSrc || source.src;
-    image.alt = source.alt || "";
+  function showLightbox(index) {
+    if (!lightbox || !lightboxImages.length) return;
+    lightboxCurrent = (index + lightboxImages.length) % lightboxImages.length;
+    const source = lightboxImages[lightboxCurrent];
+    lightboxImage.src = source.currentSrc || source.src;
+    lightboxImage.alt = source.alt || "";
     const text = captionOf(source);
-    caption.textContent = text;
-    caption.hidden = !text;
-    counter.textContent = images.length > 1 ? `${current + 1} / ${images.length}` : "";
-    counter.hidden = images.length <= 1;
-    const single = images.length <= 1;
+    lightboxCaption.textContent = text;
+    lightboxCaption.hidden = !text;
+    lightboxCounter.textContent = lightboxImages.length > 1 ? `${lightboxCurrent + 1} / ${lightboxImages.length}` : "";
+    lightboxCounter.hidden = lightboxImages.length <= 1;
+    const single = lightboxImages.length <= 1;
     lightbox.querySelector(".lightbox-prev").hidden = single;
     lightbox.querySelector(".lightbox-next").hidden = single;
     lightbox.hidden = false;
     document.body.classList.add("lightbox-open");
   }
 
-  function close() {
+  function closeLightbox() {
+    if (!lightbox) return;
     lightbox.hidden = true;
     document.body.classList.remove("lightbox-open");
-    image.removeAttribute("src");
+    if (lightboxImage) lightboxImage.removeAttribute("src");
   }
 
-  images.forEach((item, index) => {
-    item.classList.add("zoomable");
-    item.addEventListener("click", () => show(index));
-  });
+  function initLightbox() {
+    if (!lightbox) return;
+    closeLightbox();
+    const article = document.querySelector(".article");
+    lightboxImages = article ? [...article.querySelectorAll("img")] : [];
+    lightboxImages.forEach((item, index) => {
+      item.classList.add("zoomable");
+      item.addEventListener("click", () => showLightbox(index));
+    });
 
-  lightbox.querySelectorAll("[data-close-lightbox]").forEach(element => {
-    element.addEventListener("click", close);
-  });
-  lightbox.querySelector(".lightbox-prev").addEventListener("click", event => {
-    event.stopPropagation();
-    show(current - 1);
-  });
-  lightbox.querySelector(".lightbox-next").addEventListener("click", event => {
-    event.stopPropagation();
-    show(current + 1);
-  });
+    if (lightboxBound) return;
+    lightboxBound = true;
+    lightbox.querySelectorAll("[data-close-lightbox]").forEach(element => {
+      element.addEventListener("click", closeLightbox);
+    });
+    lightbox.querySelector(".lightbox-prev").addEventListener("click", event => {
+      event.stopPropagation();
+      showLightbox(lightboxCurrent - 1);
+    });
+    lightbox.querySelector(".lightbox-next").addEventListener("click", event => {
+      event.stopPropagation();
+      showLightbox(lightboxCurrent + 1);
+    });
 
-  addEventListener("keydown", event => {
-    if (lightbox.hidden) return;
-    if (event.key === "Escape") close();
-    else if (event.key === "ArrowLeft") show(current - 1);
-    else if (event.key === "ArrowRight") show(current + 1);
-  });
+    addEventListener("keydown", event => {
+      if (!lightbox || lightbox.hidden) return;
+      if (event.key === "Escape") closeLightbox();
+      else if (event.key === "ArrowLeft") showLightbox(lightboxCurrent - 1);
+      else if (event.key === "ArrowRight") showLightbox(lightboxCurrent + 1);
+    });
+  }
+
+  window.__initLightbox = initLightbox;
+  window.__closeOverlays = () => {
+    closeSearch();
+    closeLightbox();
+  };
+  initLightbox();
 })();
