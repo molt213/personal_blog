@@ -1,5 +1,17 @@
 import { DOWNLOADS } from "../../content/downloads.js";
 
+// 搜索跳转要用到锚点，统一在这里算，避免页面和索引各写一套。
+export function downloadAnchor(item) {
+  const base = String(item?.file || "")
+    .split("/")
+    .pop()
+    .replace(/\.[^.]+$/, "")
+    .replace(/[^A-Za-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+  return `dl-${base || "file"}`;
+}
+
 export function renderDownloadsPage(downloads = DOWNLOADS) {
   const items = downloads
     .filter(item => item && item.file)
@@ -25,7 +37,7 @@ function renderDownloadCard(item) {
     : "";
 
   return `
-<article class="dl-card">
+<article class="dl-card" id="${escapeHtml(downloadAnchor(item))}">
   <div class="dl-top">
     <span class="dl-badge" aria-hidden="true">${escapeHtml(item.format || "FILE")}</span>
     <div class="dl-head">

@@ -65,6 +65,9 @@
     );
   }
 
+  const TYPE_ICONS = { 随记: "✦", 资料: "↓" };
+  const typeIcon = type => TYPE_ICONS[type] || "⌂";
+
   function render(query) {
     const q = query.trim();
     filtered = ITEMS.filter(item => {
@@ -91,7 +94,7 @@
           <p class="cmdk-group-label">${escapeHtml(type)}</p>
           ${rows.map(({ item, index }) => `
             <a class="cmdk-item${index === active ? " active" : ""}" href="${escapeHtml(item.href)}" data-index="${index}">
-              <span class="cmdk-icon" aria-hidden="true">${item.type === "随记" ? "✦" : "⌂"}</span>
+              <span class="cmdk-icon" aria-hidden="true">${typeIcon(item.type)}</span>
               <span class="cmdk-copy"><strong>${highlight(item.title, q)}</strong><small>${highlight(item.desc, q)}</small></span>
               <span class="cmdk-meta">${escapeHtml(item.meta)}</span>
             </a>`).join("")}

@@ -1,6 +1,8 @@
 import { NAVIGATION } from "../../content/site.js";
 import { POSTS } from "../../content/posts/index.js";
 import { MUSIC } from "../../content/music.js";
+import { DOWNLOADS } from "../../content/downloads.js";
+import { downloadAnchor } from "./downloads-page.js";
 
 const PAGE_ITEMS = [
   { type: "页面", title: "首页", desc: "让想法有处慢慢停靠", meta: "HOME", href: "/" },
@@ -23,6 +25,13 @@ export function renderPage({ title, active, content, site, canonicalUrl, guestbo
       desc: post.lead || post.excerpt || "",
       meta: post.date,
       href: `/posts/${post.slug}.html`
+    })),
+    ...DOWNLOADS.filter(item => item && item.file).map(item => ({
+      type: "资料",
+      title: item.title,
+      desc: [item.description, item.count, item.format, item.size].filter(Boolean).join(" · "),
+      meta: item.date || "",
+      href: `/downloads#${downloadAnchor(item)}`
     })),
     ...PAGE_ITEMS
   ];

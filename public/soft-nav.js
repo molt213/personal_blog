@@ -162,7 +162,12 @@
         const id = decodeURIComponent(url.hash.slice(1));
         const targetNode = document.getElementById(id);
         if (targetNode) {
-          requestAnimationFrame(() => targetNode.scrollIntoView());
+          // 同步、瞬时滚动：站点全局开了 scroll-behavior: smooth，
+          // 这里如果跟着动画走，标签页不绘制时会停在原地。
+          targetNode.scrollIntoView({ block: "start", behavior: "instant" });
+          // pushState 不会触发 :target，用 class 补一次高亮。
+          targetNode.classList.add("is-soft-target");
+          setTimeout(() => targetNode.classList.remove("is-soft-target"), 2400);
           return;
         }
       }
@@ -204,6 +209,17 @@
     }
     navigate(target, { push: false, scroll: Number(event.state?.scrollY) || 0 });
   });
+
+  // 直接打开带 #锚点 的链接时浏览器会自己滚动，但不一定会触发 :target，补一次高亮。
+  function highlightHashTarget() {
+    if (!window.location.hash) return;
+    const node = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    if (!node) return;
+    node.classList.add("is-soft-target");
+    setTimeout(() => node.classList.remove("is-soft-target"), 2400);
+  }
+
+  highlightHashTarget();
 
   window.__softNavigate = href => navigate(href, { push: true });
 })();
