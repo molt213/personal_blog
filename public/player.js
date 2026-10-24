@@ -249,14 +249,26 @@
     });
     player.querySelectorAll("[data-count]").forEach(el => (el.textContent = String(tracks.length)));
     player.querySelectorAll("[data-cover]").forEach(img => {
-      if (!track.cover) return;
-      if (img.getAttribute("src") !== track.cover) {
-        img.classList.remove("is-loaded");
-        img.src = track.cover;
+      const src = track.cover;
+      if (!src) return;
+      if (img.getAttribute("src") === src) {
+        if (img.complete && img.naturalWidth) img.classList.add("is-loaded");
+        return;
       }
-      const markLoaded = () => img.classList.add("is-loaded");
-      if (img.complete && img.naturalWidth) markLoaded();
-      else img.addEventListener("load", markLoaded, { once: true });
+      if (img.dataset.loading === src) return;
+      // 先把新封面下完再换：直接改 src 会有一瞬间空白，
+      // 那时只剩黑胶露在外面，看着就像唱片跳了一下。
+      img.dataset.loading = src;
+      const loader = new Image();
+      loader.onload = () => {
+        if (img.dataset.loading !== src) return;
+        img.src = src;
+        img.classList.add("is-loaded");
+      };
+      loader.onerror = () => {
+        if (img.dataset.loading === src) img.dataset.loading = "";
+      };
+      loader.src = src;
     });
     setPlayIcon(playing);
     renderPlaylist(index);

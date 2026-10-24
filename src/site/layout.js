@@ -97,7 +97,7 @@ function renderPlayer() {
       <div class="splayer-head"><span><i></i>NOW PLAYING</span><span data-index>01 / --</span></div>
       <div class="splayer-art">
         <img data-cover alt="">
-        <span class="splayer-vinyl" aria-hidden="true"></span>
+        <span class="splayer-vinyl" aria-hidden="true"><i></i></span>
         <button class="splayer-play" type="button" data-play aria-label="播放" disabled>
           <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8 18 12 8.5 18.2Z"/></svg>
         </button>

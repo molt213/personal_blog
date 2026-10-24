@@ -83,14 +83,15 @@
   width: 100%;
   aspect-ratio: 1;
 }
+/* 封面只占左边 82%，右边把黑胶露出来。 */
 .splayer-art img {
   position: absolute;
   z-index: 2;
-  top: 8%;
+  top: 7%;
   left: 0;
   display: block;
-  width: 84%;
-  height: 84%;
+  width: 82%;
+  height: 82%;
   border-radius: 14px;
   object-fit: cover;
   opacity: 0;
@@ -99,28 +100,40 @@
 .splayer-art img.is-loaded {
   opacity: 1;
 }
-/* 封面只占左边 84%，右边留出黑胶；播放时黑胶再往右滑一点。 */
+/* 圆盘本身不参与旋转：只有内部的纹理层在转，
+   这样无论哪个浏览器合成，轮廓都不会抖动。 */
 .splayer-vinyl {
   position: absolute;
   z-index: 1;
-  top: 8%;
+  top: 5%;
   right: 0;
-  width: 84%;
-  height: 84%;
+  width: 86%;
+  height: 86%;
+  overflow: hidden;
   border-radius: 50%;
   background: repeating-radial-gradient(circle, #0d1422 0 2px, #1b2537 2px 3px);
   transition: transform 0.45s ease;
 }
-.splayer-vinyl::after {
-  content: "";
+.splayer-vinyl i {
   position: absolute;
-  inset: 34%;
+  inset: 0;
+  display: block;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--card) 0 15%, var(--yellow) 16%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 15%,
+    rgba(255, 255, 255, 0.13) 19%,
+    transparent 23% 51%,
+    rgba(255, 255, 255, 0.06) 56%,
+    transparent 61%
+  );
+  will-change: transform;
 }
 .splayer.is-playing .splayer-vinyl {
-  animation: player-spin 8s linear infinite;
-  transform: translateX(5%);
+  transform: translateX(4%);
+}
+.splayer.is-playing .splayer-vinyl i {
+  animation: player-spin 9s linear infinite;
 }
 .splayer-play {
   position: absolute;
@@ -608,10 +621,10 @@ body.is-soft-navigating .soft-nav-progress {
     height: 56px;
   }
   .splayer-vinyl {
-    top: 8%;
+    top: 5%;
     right: 0;
-    width: 84%;
-    height: 84%;
+    width: 86%;
+    height: 86%;
   }
   .splayer-play {
     bottom: 4px;
@@ -698,7 +711,7 @@ body.is-soft-navigating .soft-nav-progress {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .splayer.is-playing .splayer-vinyl,
+  .splayer.is-playing .splayer-vinyl i,
   .splayer .track-eq i,
   .soft-nav-progress {
     animation: none;
