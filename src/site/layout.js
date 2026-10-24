@@ -118,12 +118,13 @@ function renderPlayerEngine() {
   const server = escapeAttribute(MUSIC.server);
   const type = escapeAttribute(MUSIC.type);
   const volume = Number(MUSIC.volume) || 0.6;
+  const api = MUSIC.api ? `\n    api="${escapeAttribute(MUSIC.api)}"` : "";
   return `
   <meting-js
     class="site-player-engine"
     id="${id}"
     server="${server}"
-    type="${type}"
+    type="${type}"${api}
     preload="metadata"
     volume="${volume}"
     list-folded="true"

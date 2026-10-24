@@ -44,23 +44,24 @@ public/         网站的外观、浏览器交互和文章正文
 
 ## 音乐播放器与软导航
 
-侧栏播放器用 APlayer + MetingJS，音频来自网易云。当前 `content/music.js` 里是一首能播的占位单曲；换成你的歌单：
+侧栏播放器用 APlayer + MetingJS，音频来自网易云。当前 `content/music.js` 里是歌单 `18518900889`（6 首）；换成别的歌单：
 
 ```js
 export const MUSIC = {
   server: "netease",
   type: "playlist",
   id: "你的歌单ID",
-  volume: 0.6
+  volume: 0.6,
+  api: "https://api.injahow.cn/meting/?server=:server&type=:type&id=:id"
 };
 ```
 
-歌单 ID 在网页版歌单地址 `https://music.163.com/#/playlist?id=123456789` 里。改完后提交，Cloudflare 自动部署。
+歌单 ID 在网页版歌单地址 `https://music.163.com/#/playlist?id=123456789` 里。`api` 是 Meting 取数接口：默认实例 `api.i-meto.com` 的取音源接口已失效（2026-10-24 实测 404），所以指向 `api.injahow.cn`；换接口时保留 `:server`、`:type`、`:id` 三个占位符。改完后提交，Cloudflare 自动部署。
 
 - 公开页（首页、随记、文章、资料、友链、关于、留言板）之间切换时，`soft-nav.js` 只替换正文，侧栏播放器不重建，音乐继续。
 - 后台 `/admin`、`/admin/downloads` 完全不参与软导航，也不加载播放器；后台入口在新标签页打开，公开页的音乐可以继续放。
 - 下载文件、外链、hash 链接、新标签页点击仍然整页加载，不会被软导航拦。
-- MetingJS 走第三方 `api.i-meto.com`，偶发不可用；播放器会提示并跳到下一首，不会卡住页面。
+- MetingJS 走第三方接口（当前 `api.injahow.cn`），偶发不可用；播放器会提示并跳到下一首，不会卡住页面。
 
 更具体的写文章说明放在 [`content/README.md`](content/README.md) 和 [`content/文章写作速查表.md`](content/文章写作速查表.md)。
 

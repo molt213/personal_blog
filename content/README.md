@@ -79,18 +79,21 @@
 
 ## 换侧栏播放器的歌单
 
-打开 `content/music.js`，把单曲改成你的网易云歌单：
+打开 `content/music.js`，换歌单：
 
 ```js
 export const MUSIC = {
   server: "netease",
   type: "playlist",
   id: "你的歌单ID",
-  volume: 0.6
+  volume: 0.6,
+  api: "https://api.injahow.cn/meting/?server=:server&type=:type&id=:id"
 };
 ```
 
-歌单 ID 在网页版歌单地址 `https://music.163.com/#/playlist?id=123456789` 里。现在的占位是一首单曲（`type: "song"`）；只放一首歌也可以保持 `song`，把 `id` 换成歌曲 ID 即可。
+歌单 ID 在网页版歌单地址 `https://music.163.com/#/playlist?id=123456789` 里。现在用的是歌单 `18518900889`（6 首）。只放一首歌也可以把 `type` 改成 `song`、`id` 填歌曲 ID。
+
+`api` 是 Meting 的取数接口：默认实例 `api.i-meto.com` 的取音源接口已失效（2026-10-24 实测 404），所以指向 `api.injahow.cn`。换接口时保留 `:server`、`:type`、`:id` 三个占位符，缺一个播放器就取不到数据。
 
 > 播放器用 MetingJS 读取网易云，第三方接口偶尔会不可用；遇到灰色/不可用歌曲，播放器会提示并尝试下一首。后台写文章、发布、图片和资料上传不受影响；后台页面不加载播放器，也不参与公开页的软导航。
 
