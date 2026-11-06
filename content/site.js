@@ -4,7 +4,7 @@ export const SITE = {
   url: "https://molt213.top",
   description: "想不到要写什么description",
   tagline: "个人的胡思乱想",
-  contactEmail: "wurui213@163.com",
+  contactEmail: "plz-reply@molt213.top",
   launchDate: "2026-08-26"
 };
 
